@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node -e \"import('./api/index.js').then(module => { module.default.listen(3000, () => console.log('Server running on port 3000')); })\"",
-    "build": "mkdir public\\Proyect 2>nul || echo Directory exists & xcopy /E /I /Y Proyect public\\Proyect\\ & copy /Y Proyect\\Html\\Principal_darck.html public\\index.html",
+    "build": "node -e \"const fs=require('fs'); fs.mkdirSync('public/Proyect', {recursive:true}); fs.cpSync('Proyect', 'public/Proyect', {recursive:true}); fs.copyFileSync('Proyect/Html/Principal_darck.html', 'public/index.html');\"",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -38,3 +38,4 @@
     "terser": "^5.46.1"
   }
 }
+
