@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Weather Analysis Hub - Autenticación</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#1dd0ed",
+                        "nav-bg": "#020617",
+                        "zone-1": "#0f172a",
+                        "zone-2": "#1e293b",
+                        "zone-3": "#020617",
+                        "accent-blue": "#0ea5e9",
+                        "data-gray": "#334155",
+                        "background-light": "#f6f8f8",
+                        "background-dark": "#101f22"
+                    },
+                    fontFamily: {
+                        display: "Inter"
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.25rem",
+                        lg: "0.5rem",
+                        xl: "0.75rem",
+                        full: "9999px"
+                    }
+                }
+            }
+        };
+    </script>
+<style type="text/tailwindcss">
+        @layer base {
+            html {
+                font-size: 62.5%;
+            }
+            body {
+                font-size: 1.6rem;
+            }
+        }.tab-content {
+            display: none;
+        }
+        #tab-login:checked ~ .card-body #content-login,
+        #tab-register:checked ~ .card-body #content-register {
+            display: block;
+        }
+        #tab-login:checked ~ .card-header label[for="tab-login"],
+        #tab-register:checked ~ .card-header label[for="tab-register"] {
+            border-bottom-color: #1dd0ed;
+            color: #1dd0ed;
+        }#avatar-url-input:valid ~ .preview-container .preview-img {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-display min-h-screen flex flex-col justify-center items-center py-12 px-4 relative overflow-hidden">
+<div class="absolute inset-0 overflow-hidden pointer-events-none">
+<div class="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-primary/5 rounded-full blur-3xl"></div>
+<div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-600/5 rounded-full blur-3xl"></div>
+</div>
+<div class="flex flex-col items-center gap-4 mb-8 z-10">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" style="font-size: 4rem;">monitoring</span>
+<h1 class="text-4xl font-bold leading-normal text-white">WeatherApp</h1>
+</div>
+<p class="text-slate-400 text-lg uppercase tracking-[0.2em] font-medium text-center">Portal de Acceso Seguro</p>
+</div>
+<div class="w-full max-w-2xl bg-zone-2/50 backdrop-blur-sm border border-slate-800 rounded-2xl shadow-2xl relative z-10 overflow-hidden">
+<input class="hidden" id="tab-login" name="auth-tab" type="radio"/>
+<input checked="" class="hidden" id="tab-register" name="auth-tab" type="radio"/>
+<div class="card-header grid grid-cols-2 border-b border-slate-700/50 bg-slate-900/30">
+<label class="cursor-pointer py-6 text-center text-sm font-bold uppercase tracking-widest text-slate-400 hover:text-slate-200 border-b-2 border-transparent transition-all duration-300" for="tab-login">
+                Iniciar Sesión
+            </label>
+<label class="cursor-pointer py-6 text-center text-sm font-bold uppercase tracking-widest text-slate-400 hover:text-slate-200 border-b-2 border-transparent transition-all duration-300" for="tab-register">
+                Registrarse
+            </label>
+</div>
+<div class="card-body p-8 sm:p-12">
+<div class="tab-content animate-fade-in" id="content-login">
+<form class="space-y-6">
+<div class="space-y-2">
+<label class="flex items-center gap-2 text-sm font-semibold text-slate-200" for="login-email">
+<span class="material-symbols-outlined text-base">mail</span>
+                            Correo Electrónico
+                        </label>
+<input autocomplete="email" class="block w-full px-4 py-3.5 border border-slate-600 rounded-lg bg-slate-900/50 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-all shadow-inner" id="login-email" name="email" placeholder="usuario@ejemplo.com" type="email"/>
+</div>
+<div class="space-y-2">
+<label class="flex items-center gap-2 text-sm font-semibold text-slate-200" for="login-password">
+<span class="material-symbols-outlined text-base">lock</span>
+                            Contraseña
+                        </label>
+<input autocomplete="current-password" class="block w-full px-4 py-3.5 border border-slate-600 rounded-lg bg-slate-900/50 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-all shadow-inner" id="login-password" name="password" placeholder="••••••••" type="password"/>
+<div class="flex justify-end mt-1">
+<a class="text-xs text-primary hover:text-accent-blue transition-colors" href="#">¿Olvidaste tu contraseña?</a>
+</div>
+</div>
+<div class="pt-4">
+<button class="w-full py-4 px-6 bg-primary hover:bg-accent-blue text-slate-900 font-bold rounded-lg shadow-lg hover:shadow-primary/20 transition-all transform active:scale-[0.99] uppercase tracking-wider flex justify-center items-center gap-2" type="button">
+<span>Ingresar</span>
+<span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</form>
+</div>
+<div class="tab-content animate-fade-in" id="content-register">
+<form class="space-y-6">
+<div class="space-y-2">
+<label class="flex items-center gap-2 text-sm font-semibold text-slate-200" for="signup-name">
+<span class="material-symbols-outlined text-base">person</span>
+                            Nombre Completo
+                        </label>
+<input autocomplete="name" class="block w-full px-4 py-3.5 border border-slate-600 rounded-lg bg-slate-900/50 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-all shadow-inner" id="signup-name" name="name" placeholder="Juan Pérez" type="text"/>
+</div>
+<div class="space-y-2">
+<label class="flex items-center gap-2 text-sm font-semibold text-slate-200" for="signup-email">
+<span class="material-symbols-outlined text-base">mail</span>
+                            Correo Electrónico
+                        </label>
+<input autocomplete="email" class="block w-full px-4 py-3.5 border border-slate-600 rounded-lg bg-slate-900/50 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-all shadow-inner" id="signup-email" name="email" placeholder="usuario@ejemplo.com" type="email"/>
+</div>
+<div class="space-y-2">
+<label class="flex items-center gap-2 text-sm font-semibold text-slate-200" for="signup-password">
+<span class="material-symbols-outlined text-base">lock</span>
+                            Contraseña
+                        </label>
+<input autocomplete="new-password" class="block w-full px-4 py-3.5 border border-slate-600 rounded-lg bg-slate-900/50 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary sm:text-sm transition-all shadow-inner" id="signup-password" name="password" placeholder="••••••••" type="password"/>
+</div>
+<hr class="border-slate-700/50 my-8"/>
+<div class="space-y-4">
+<label class="block text-sm font-bold uppercase tracking-wider text-slate-400">Imagen de Perfil</label>
+<div class="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
+<div class="preview-container flex-shrink-0 relative w-28 h-28 rounded-full border-2 border-dashed border-primary/50 flex items-center justify-center bg-slate-900/50 overflow-hidden group">
+<span class="material-symbols-outlined text-primary/30 text-4xl group-hover:text-primary/50 transition-colors">account_circle</span>
+<img alt="" class="preview-img absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300 bg-slate-800" onerror="this.style.opacity='0'" src=""/>
+</div>
+<div class="flex-grow space-y-4 w-full">
+<div class="space-y-1">
+<label class="text-xs font-medium text-slate-400 ml-1">Opción 1: URL Web</label>
+<input class="block w-full px-4 py-3 border border-slate-600 rounded-lg bg-slate-900/50 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-sm transition-all" id="avatar-url-input" name="avatar-url" oninput="document.querySelector('.preview-img').src = this.value; document.querySelector('.preview-img').style.opacity = this.value ? '1' : '0';" placeholder="https://..." type="url"/>
+</div>
+<div class="space-y-1">
+<label class="text-xs font-medium text-slate-400 ml-1">Opción 2: Archivo Local</label>
+<label class="flex items-center justify-center w-full py-3 px-4 border border-slate-600 rounded-lg bg-slate-800 hover:bg-slate-700 hover:border-primary cursor-pointer transition-all group shadow-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-white transition-colors text-lg">upload_file</span>
+<span class="text-sm font-medium text-slate-300 group-hover:text-white transition-colors">Subir desde sistema</span>
+</div>
+<input class="hidden" onchange="if(this.files &amp;&amp; this.files[0]) { var reader = new FileReader(); reader.onload = function(e) { document.querySelector('.preview-img').src = e.target.result; document.querySelector('.preview-img').style.opacity = '1'; }; reader.readAsDataURL(this.files[0]); }" type="file"/>
+</label>
+</div>
+</div>
+</div>
+</div>
+<div class="pt-6">
+<button class="w-full py-4 px-6 bg-primary hover:bg-accent-blue text-slate-900 font-bold rounded-lg shadow-lg hover:shadow-primary/20 transition-all transform active:scale-[0.99] uppercase tracking-wider flex justify-center items-center gap-2" type="button">
+<span>Registrarse</span>
+<span class="material-symbols-outlined">person_add</span>
+</button>
+</div>
+<p class="text-center text-xs text-slate-500 mt-4 uppercase tracking-widest">
+                        Protegido por protocolos de seguridad bancaria
+                    </p>
+</form>
+</div>
+</div>
+</div>
+<div class="mt-8 flex gap-6 text-xs text-slate-500 uppercase tracking-wider font-medium">
+<div class="flex items-center gap-1.5 text-green-500">
+<span class="block w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+            Sistema Online
+        </div>
+</div>
+
+</body></html>

@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Scientific Weather Analysis Hub</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>tailwind.config = {darkMode: "class", theme: {extend: {colors: {primary: "#1dd0ed", "nav-bg": "#020617", "zone-1": "#0f172a", "zone-2": "#1e293b", "zone-3": "#020617", "accent-blue": "#0ea5e9", "data-gray": "#334155", "background-light": "#f6f8f8", "background-dark": "#101f22"}, fontFamily: {display: "Inter"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}}}};</script>
+<style type="text/tailwindcss">
+        @layer base {
+            html {
+                font-size: 62.5%;
+            }
+            body {
+                font-size: 1.6rem;
+            }
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .segmented-workspace {
+            display: grid;
+            grid-template-columns: 320px 1fr 450px;
+            height: calc(100vh - 70px);
+            overflow: hidden;
+        }
+        @media (max-width: 1280px) {
+            .segmented-workspace {
+                grid-template-columns: 280px 1fr;
+                overflow-y: auto;
+                height: auto;
+            }
+            .zone-3 { grid-column: span 2; }
+        }
+        @media (max-width: 1024px) {
+            .segmented-workspace {
+                grid-template-columns: 1fr;
+            }
+            .zone-1, .zone-2, .zone-3 { grid-column: span 1; }
+        }
+        .map-overlay-gradient {
+            background: linear-gradient(to top, rgba(2, 6, 23, 0.95) 0%, rgba(2, 6, 23, 0.4) 40%, rgba(2, 6, 23, 0) 100%);
+        }
+        .trend-line {
+            stroke: #38bdf8;
+            stroke-width: 2;
+            fill: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-display min-h-screen flex overflow-hidden">
+<aside class="w-[280px] bg-nav-bg border-r border-slate-800 flex-col hidden lg:flex h-screen sticky top-0 z-30">
+<div class="p-6">
+<div class="flex flex-col gap-1 mb-8">
+<h1 class="text-2xl font-bold leading-normal text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="font-size: 2.8rem;">monitoring</span>
+                WeatherApp
+            </h1>
+<p class="text-slate-500 text-sm font-normal">v2.0 Pro</p>
+</div>
+<nav class="flex flex-col gap-2 mb-8">
+<a class="flex items-center gap-4 px-4 py-3 rounded bg-primary/10 text-primary border-l-2 border-primary" href="#">
+<span class="material-symbols-outlined fill-1">analytics</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded text-slate-400 hover:bg-slate-900 transition-colors" href="#">
+<span class="material-symbols-outlined">explore</span>
+<span class="text-sm font-medium">Map</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded text-slate-400 hover:bg-slate-900 transition-colors" href="#">
+<span class="material-symbols-outlined">account_circle</span>
+<span class="text-sm font-medium">Profile</span>
+</a>
+</nav>
+<div class="mb-4">
+<h3 class="px-4 text-[1rem] font-bold text-slate-600 uppercase tracking-[0.2em] mb-4">Saved Locations</h3>
+<div class="flex flex-col gap-1">
+<a class="flex items-center gap-4 px-4 py-2 text-slate-400 hover:text-white transition-colors group" href="#">
+<span class="material-symbols-outlined text-[1.8rem]">location_on</span>
+<span class="text-sm font-medium">London, UK</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-2 text-slate-400 hover:text-white transition-colors group" href="#">
+<span class="material-symbols-outlined text-[1.8rem]">location_on</span>
+<span class="text-sm font-medium">Tokyo, JP</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-2 text-slate-400 hover:text-white transition-colors group" href="#">
+<span class="material-symbols-outlined text-[1.8rem]">location_on</span>
+<span class="text-sm font-medium">New York, USA</span>
+</a>
+</div>
+</div>
+</div>
+<div class="mt-auto p-6 border-t border-slate-800">
+<button class="flex items-center gap-3 w-full text-slate-500 hover:text-red-400 transition-colors">
+<span class="material-symbols-outlined">logout</span>
+<span class="text-sm font-medium">Log Out</span>
+</button>
+</div>
+</aside>
+<main class="flex-1 flex flex-col h-screen overflow-hidden bg-slate-950">
+<header class="h-[70px] px-8 flex items-center justify-between border-b border-slate-800 bg-nav-bg shrink-0 z-20">
+<button class="lg:hidden text-slate-400 hover:text-primary mr-4">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div class="flex-1 max-w-xl relative">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-slate-500 text-[2rem]">search</span>
+</div>
+<input class="block w-full pl-12 pr-4 py-2 bg-slate-900 border border-slate-800 rounded text-white placeholder-slate-600 focus:ring-1 focus:ring-primary focus:border-primary outline-none text-sm transition-all" placeholder="Search for a city..." type="text" value="San Francisco"/>
+</div>
+<div class="flex items-center gap-6 ml-6">
+<div class="hidden sm:flex items-center gap-3">
+<div class="flex items-center bg-slate-900 border border-slate-800 rounded-full p-1 relative w-20 h-9 transition-all duration-300 cursor-pointer select-none">
+<div class="absolute left-1 top-1 w-7 h-7 bg-slate-700 rounded-full flex items-center justify-center transition-transform transform translate-x-10 shadow-sm">
+<span class="material-symbols-outlined text-[18px] text-yellow-300 fill-1">dark_mode</span>
+</div>
+<div class="flex justify-between items-center w-full px-2">
+<span class="material-symbols-outlined text-[18px] text-slate-500">light_mode</span>
+<span class="w-4"></span>
+</div>
+</div>
+<div class="flex items-center bg-slate-900 border border-slate-800 rounded p-1">
+<button class="px-3 py-1 rounded bg-slate-800 shadow-sm text-xs font-bold text-white">EN</button>
+<button class="px-3 py-1 text-xs font-medium text-slate-500 hover:text-slate-300">ES</button>
+</div>
+</div>
+<div class="flex items-center gap-3 pl-6 border-l border-slate-800">
+<div class="text-right hidden md:block">
+<p class="text-xs font-bold text-white uppercase tracking-tighter">Alex Morgan</p>
+<p class="text-[1rem] text-primary">Premium Analysis</p>
+</div>
+<div class="w-10 h-10 rounded bg-slate-800 border border-slate-700 flex items-center justify-center text-primary font-bold">
+                    AM
+                </div>
+</div>
+</div>
+</header>
+<div class="segmented-workspace">
+<section class="zone-1 bg-zone-1 border-r border-slate-800 flex flex-col overflow-y-auto no-scrollbar">
+<div class="p-6 border-b border-slate-800 bg-slate-950/50">
+<h2 class="text-2xl font-bold text-white tracking-tight">San Francisco</h2>
+<p class="text-slate-400 text-sm">California, US</p>
+<div class="mt-4 flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded border border-primary/20">
+<span class="material-symbols-outlined text-primary text-sm">sensors</span>
+<span class="text-[1rem] font-mono text-primary uppercase tracking-widest">Real-time Station</span>
+</div>
+</div>
+<div class="flex-1 p-6 space-y-6">
+<div class="space-y-4">
+<div class="p-4 bg-slate-900/50 border border-slate-800 rounded">
+<p class="text-[1rem] font-bold text-slate-500 uppercase tracking-widest mb-2">Temperature</p>
+<div class="flex items-baseline gap-2">
+<span class="text-5xl font-bold text-white leading-none">18</span>
+<span class="text-2xl text-primary font-medium">°C</span>
+</div>
+<p class="text-xs text-slate-400 mt-2 flex items-center gap-1">
+<span class="material-symbols-outlined text-xs text-green-400">arrow_upward</span>
+                            Partly Cloudy
+                        </p>
+</div>
+<div class="p-4 bg-slate-900/50 border border-slate-800 rounded">
+<p class="text-[1rem] font-bold text-slate-500 uppercase tracking-widest mb-2">Wind</p>
+<div class="flex items-baseline gap-2">
+<span class="text-4xl font-bold text-white leading-none">12</span>
+<span class="text-xl text-primary">km/h</span>
+</div>
+<div class="mt-3 flex gap-2">
+<span class="text-[1rem] bg-slate-950 px-2 py-0.5 rounded text-slate-400 font-mono">NE</span>
+<span class="text-[1rem] bg-slate-950 px-2 py-0.5 rounded text-slate-400 font-mono border border-slate-800">Steady</span>
+</div>
+</div>
+<div class="p-4 bg-slate-900/50 border border-slate-800 rounded">
+<p class="text-[1rem] font-bold text-slate-500 uppercase tracking-widest mb-2">Humidity</p>
+<div class="flex items-baseline gap-2">
+<span class="text-4xl font-bold text-white leading-none">65</span>
+<span class="text-xl text-primary">%</span>
+</div>
+<div class="w-full bg-slate-950 h-1.5 mt-3 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[65%] shadow-[0_0_8px_rgba(56,189,248,0.5)]"></div>
+</div>
+</div>
+<div class="p-4 bg-slate-900/50 border border-slate-800 rounded">
+<p class="text-[1rem] font-bold text-slate-500 uppercase tracking-widest mb-2">Feels Like</p>
+<div class="flex items-baseline gap-2">
+<span class="text-4xl font-bold text-white leading-none">16</span>
+<span class="text-xl text-primary">°C</span>
+</div>
+<p class="text-xs text-slate-400 mt-1 uppercase">Delta: -2° Index</p>
+</div>
+</div>
+<div class="space-y-3 pt-6 border-t border-slate-800">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-primary text-sm">schedule</span>
+<h4 class="text-[1rem] font-bold text-white uppercase tracking-wider">Late Analysis</h4>
+</div>
+<div class="flex justify-between items-center p-3 bg-slate-950/40 rounded border border-slate-800">
+<span class="text-[1rem] text-slate-500 font-mono uppercase">8 PM</span>
+<span class="material-symbols-outlined text-lg text-slate-400">nightlight_round</span>
+<span class="font-bold text-white">15°C</span>
+</div>
+<div class="flex justify-between items-center p-3 bg-slate-950/40 rounded border border-slate-800">
+<span class="text-[1rem] text-slate-500 font-mono uppercase">9 PM</span>
+<span class="material-symbols-outlined text-lg text-slate-400">cloudy</span>
+<span class="font-bold text-white">15°C</span>
+</div>
+</div>
+</div>
+</section>
+<section class="zone-2 bg-zone-2 flex flex-col overflow-hidden border-r border-slate-800">
+<div class="p-6 border-b border-slate-800 bg-slate-900/30 flex justify-between items-center">
+<h3 class="text-sm font-bold text-white uppercase tracking-widest">12-Hour Forecast</h3>
+<span class="text-[1rem] font-mono text-primary">Granularity: 60min</span>
+</div>
+<div class="flex-1 overflow-y-auto no-scrollbar">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="text-[1.1rem] text-slate-400 uppercase tracking-wider bg-slate-950/40">
+<th class="px-6 py-4 font-semibold border-b border-slate-800">Time</th>
+<th class="px-6 py-4 font-semibold border-b border-slate-800">Status</th>
+<th class="px-6 py-4 font-semibold border-b border-slate-800">Temp</th>
+<th class="px-6 py-4 font-semibold border-b border-slate-800">Precip</th>
+<th class="px-6 py-4 font-semibold border-b border-slate-800">UV</th>
+</tr>
+</thead>
+<tbody class="text-sm font-mono text-slate-300">
+<tr class="hover:bg-primary/5 transition-colors border-b border-slate-800/40">
+<td class="px-6 py-4 text-primary font-bold">Now</td>
+<td class="px-6 py-4"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">partly_cloudy_day</span><span>Partly Cloudy</span></div></td>
+<td class="px-6 py-4 font-bold text-white">18°C</td>
+<td class="px-6 py-4">0%</td>
+<td class="px-6 py-4">Low (2)</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors border-b border-slate-800/40">
+<td class="px-6 py-4">2 PM</td>
+<td class="px-6 py-4"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">cloud</span><span>Cloudy</span></div></td>
+<td class="px-6 py-4 font-bold text-white">19°C</td>
+<td class="px-6 py-4">5%</td>
+<td class="px-6 py-4">Low (1)</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors border-b border-slate-800/40">
+<td class="px-6 py-4">3 PM</td>
+<td class="px-6 py-4"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">sunny</span><span>Sunny</span></div></td>
+<td class="px-6 py-4 font-bold text-white">20°C</td>
+<td class="px-6 py-4">0%</td>
+<td class="px-6 py-4">Mod (4)</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors border-b border-slate-800/40">
+<td class="px-6 py-4">4 PM</td>
+<td class="px-6 py-4"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">sunny</span><span>Sunny</span></div></td>
+<td class="px-6 py-4 font-bold text-white">19°C</td>
+<td class="px-6 py-4">0%</td>
+<td class="px-6 py-4">Low (2)</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors border-b border-slate-800/40">
+<td class="px-6 py-4">5 PM</td>
+<td class="px-6 py-4"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">partly_cloudy_day</span><span>Partly Cloudy</span></div></td>
+<td class="px-6 py-4 font-bold text-white">18°C</td>
+<td class="px-6 py-4">0%</td>
+<td class="px-6 py-4">Low (1)</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors border-b border-slate-800/40">
+<td class="px-6 py-4">6 PM</td>
+<td class="px-6 py-4"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">partly_cloudy_night</span><span>Clear</span></div></td>
+<td class="px-6 py-4 font-bold text-white">17°C</td>
+<td class="px-6 py-4">0%</td>
+<td class="px-6 py-4">None</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors border-b border-slate-800/40">
+<td class="px-6 py-4">7 PM</td>
+<td class="px-6 py-4"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">nightlight_round</span><span>Clear Sky</span></div></td>
+<td class="px-6 py-4 font-bold text-white">16°C</td>
+<td class="px-6 py-4">0%</td>
+<td class="px-6 py-4">None</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors border-b border-slate-800/40">
+<td class="px-6 py-4">8 PM</td>
+<td class="px-6 py-4"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">nightlight_round</span><span>Clear Sky</span></div></td>
+<td class="px-6 py-4 font-bold text-white">15°C</td>
+<td class="px-6 py-4">0%</td>
+<td class="px-6 py-4">None</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-6">
+<div class="flex items-center justify-between mb-4">
+<h4 class="text-xs font-bold text-white uppercase tracking-[0.2em]">Atmospheric Trend (12H)</h4>
+<span class="text-[1rem] text-primary">Live Projection</span>
+</div>
+<div class="h-40 w-full relative bg-slate-950/40 rounded border border-slate-800 p-4">
+<svg class="w-full h-full overflow-visible" viewbox="0 0 400 100">
+<path class="trend-line" d="M0,60 Q50,40 100,50 T200,30 T300,70 T400,60"></path>
+<circle cx="0" cy="60" fill="#38bdf8" r="3"></circle>
+<circle cx="100" cy="50" fill="#38bdf8" r="3"></circle>
+<circle cx="200" cy="30" fill="#38bdf8" r="3"></circle>
+<circle cx="300" cy="70" fill="#38bdf8" r="3"></circle>
+<circle cx="400" cy="60" fill="#38bdf8" r="3"></circle>
+</svg>
+<div class="flex justify-between mt-4 text-[1rem] text-slate-500 font-mono">
+<span>Now</span>
+<span>4PM</span>
+<span>8PM</span>
+<span>12AM</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="zone-3 bg-zone-3 flex flex-col relative overflow-hidden">
+<div class="flex-1 relative group">
+<div class="absolute inset-0 bg-cover bg-center opacity-70 mix-blend-screen grayscale" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCy9_RW2uj1LVRpx9EIOgpyOKSf7cU7Qs98Ezh6rnM3J0-FP26ghzNUGV0UrqTVaHSNjNo0R85tzu8Z2hIQ6z5pWx6EbeeREFh0IPHo6E58LhmAfy1fqrozXWIEwD3T8zL5nWEt-6b_UMNoH59Ze6Qb2cJaV_dI3BwXxpa-Kx4fhpGevfnSXzdtAGP7Fc-Q435PZvJc8sRSfpEiGgV4IRYyJoS60ERHh2yzx3vVms78J-xhTIepPnzDYtoy15xC_z0kC-YMxxxIdLk'); filter: brightness(0.7) contrast(1.2);"></div>
+<div class="absolute inset-0 bg-blue-900/10 pointer-events-none"></div>
+<div class="absolute top-6 right-6 flex flex-col gap-3 z-10">
+<button class="bg-slate-900 border border-slate-700 w-10 h-10 flex items-center justify-center rounded shadow-lg text-primary hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined text-xl">layers</span>
+</button>
+<button class="bg-slate-900 border border-slate-700 w-10 h-10 flex items-center justify-center rounded shadow-lg text-primary hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined text-xl">air</span>
+</button>
+<button class="bg-slate-900 border border-slate-700 w-10 h-10 flex items-center justify-center rounded shadow-lg text-primary hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined text-xl">thermostat_auto</span>
+</button>
+</div>
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+<div class="relative w-16 h-16 flex items-center justify-center">
+<div class="absolute inset-0 border border-primary/20 rounded-full"></div>
+<div class="w-[1px] h-8 bg-primary/40 absolute"></div>
+<div class="h-[1px] w-8 bg-primary/40 absolute"></div>
+<div class="w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_12px_#38bdf8]"></div>
+</div>
+</div>
+<div class="absolute bottom-0 left-0 right-0 map-overlay-gradient p-6 pt-20 z-10">
+<div class="bg-slate-900/80 backdrop-blur-md border border-slate-700/50 rounded-lg p-5">
+<div class="grid grid-cols-2 gap-6 mb-4">
+<div>
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-primary text-sm">insights</span>
+<h4 class="text-[1rem] font-bold text-white uppercase tracking-widest">Stability Profile</h4>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between items-center text-[1.1rem]">
+<span class="text-slate-400">Pressure</span>
+<span class="font-mono text-white">1012.4 <span class="text-[1rem] text-slate-500">hPa</span></span>
+</div>
+<div class="flex justify-between items-center text-[1.1rem]">
+<span class="text-slate-400">Dew Point</span>
+<span class="font-mono text-white">12.1 <span class="text-[1rem] text-slate-500">°C</span></span>
+</div>
+<div class="flex justify-between items-center text-[1.1rem]">
+<span class="text-slate-400">Visibility</span>
+<span class="font-mono text-white">16.0 <span class="text-[1rem] text-slate-500">km</span></span>
+</div>
+</div>
+</div>
+<div class="flex flex-col justify-between">
+<div class="space-y-2">
+<div class="flex justify-between text-[1rem] font-mono text-slate-400">
+<span>10°C</span>
+<span>30°C</span>
+</div>
+<div class="h-2 w-full rounded-full bg-gradient-to-r from-blue-600 via-green-400 to-red-500"></div>
+<p class="text-[1rem] text-slate-500 uppercase font-bold tracking-tight">Thermal Heatmap Overlay</p>
+</div>
+<div class="flex items-center justify-end gap-2 text-primary font-mono text-[1rem]">
+<div class="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_#38bdf8]"></div>
+<span>Stream Live Data</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+</body></html>
