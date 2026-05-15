@@ -8,11 +8,11 @@ async function initDB() {
     console.log('Conectando a Aiven MySQL...');
     const sql = fs.readFileSync('setup_db.sql', 'utf8');
     
-    // Separar por punto y coma, ignorando comentarios
+    // Separar por punto y coma, limpiar comentarios dentro de cada bloque
     const queries = sql
       .split(';')
-      .map(q => q.trim())
-      .filter(q => q.length > 0 && !q.startsWith('--'));
+      .map(q => q.split('\n').filter(line => !line.trim().startsWith('--')).join('\n').trim())
+      .filter(q => q.length > 0);
 
     console.log(`Se encontraron ${queries.length} consultas para ejecutar.`);
 
