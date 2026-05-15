@@ -1098,7 +1098,7 @@ async function eliminarCiudad(nombre) {
   lsSet(LS_CIUDADES, estado.ciudadesGuardadas);
 
   try {
-    await fetch(`/api/user/cities/${encodeURIComponent(nombre)}`, {
+    await fetch(`/api/user/cities?name=${encodeURIComponent(nombre)}`, {
         method: 'DELETE'
     });
   } catch (err) {
