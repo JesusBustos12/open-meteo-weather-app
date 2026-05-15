@@ -2,15 +2,13 @@
 -- SETUP DATABASE - WEATHERAPP PRO
 -- =====================================================
 
--- 1. Crear Base de Datos
-CREATE DATABASE IF NOT EXISTS weather_app_db;
-USE weather_app_db;
+-- 1. Base de Datos
+-- En Aiven, la base de datos 'defaultdb' ya está creada y en uso por defecto.
+-- No necesitamos ejecutar CREATE DATABASE ni USE.
 
--- 2. Crear Usuario Administrador del Proyecto
--- Nota: En producción, cambia 'weather_pass_2026' por una clave fuerte
-CREATE USER IF NOT EXISTS 'weather_user'@'localhost' IDENTIFIED BY 'weather_pass_2026';
-GRANT ALL PRIVILEGES ON weather_app_db.* TO 'weather_user'@'localhost';
-FLUSH PRIVILEGES;
+-- 2. Usuario
+-- En Aiven, el usuario 'avnadmin' ya está creado y configurado.
+-- No necesitamos ejecutar CREATE USER ni GRANT.
 
 -- 3. Tabla de Usuarios
 CREATE TABLE IF NOT EXISTS users (
