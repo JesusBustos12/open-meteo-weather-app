@@ -54,6 +54,6 @@ export async function POST(req) {
     if (error.code === 'ER_DUP_ENTRY') {
       return NextResponse.json({ error: 'El email ya existe' }, { status: 400 });
     }
-    return NextResponse.json({ error: 'Error en el servidor' }, { status: 500 });
+    return NextResponse.json({ error: 'Error en el servidor', details: error.message }, { status: 500 });
   }
 }
