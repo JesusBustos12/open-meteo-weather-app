@@ -1,7 +1,7 @@
 const CACHE_NAME = 'weather-app-v7';
 const STATIC_ASSETS = [
     './',
-    './index.html',
+    './dashboard.html',
     './assets/css/styles.css',
     './assets/js/main.js',
     './assets/js/i18n.js',

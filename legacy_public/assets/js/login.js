@@ -34,7 +34,7 @@ function aplicarTema() {
 function verificarSesion() {
     const sesion = lsGet(LS_SESION);
     if (sesion && sesion.activa) {
-        window.location.replace('index.html');
+        window.location.replace('dashboard.html');
     }
 }
 
@@ -223,7 +223,7 @@ async function manejarLogin(e) {
         /* Éxito */
         mostrarFeedback(dom.loginFeedback, t('exito_bienvenido'), 'exito');
         document.getElementById('btn-login').disabled = true;
-        setTimeout(() => window.location.replace('index.html'), 1000);
+        setTimeout(() => window.location.replace('dashboard.html'), 1000);
     } catch (err) {
         mostrarFeedback(dom.loginFeedback, 'Error de conexión con el servidor', 'error');
     }
@@ -298,7 +298,7 @@ async function manejarRegistro(e) {
         /* Éxito */
         mostrarFeedback(dom.regFeedback, t('exito_cuenta'), 'exito');
         document.getElementById('btn-registro').disabled = true;
-        setTimeout(() => window.location.replace('index.html'), 1000);
+        setTimeout(() => window.location.replace('dashboard.html'), 1000);
     } catch (err) {
         mostrarFeedback(dom.regFeedback, 'Error al conectar con el servidor', 'error');
     }
