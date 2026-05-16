@@ -1,10 +1,16 @@
 {
   "version": 2,
   "framework": null,
-  "rewrites": [
+  "redirects": [
     {
       "source": "/",
-      "destination": "/login.html"
+      "destination": "/login.html",
+      "statusCode": 302
+    },
+    {
+      "source": "/index.html",
+      "destination": "/login.html",
+      "statusCode": 302
     }
   ]
 }
