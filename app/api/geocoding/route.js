@@ -61,10 +61,10 @@ export async function GET(req) {
       return { ...item, _score: score };
     });
 
-    // Ordenar por puntuación descendente y devolver solo las 3 mejores opciones
+    // Ordenar por puntuación descendente y devolver solo la mejor opción
     const finalResults = scoredResults
       .sort((a, b) => b._score - a._score)
-      .slice(0, 3);
+      .slice(0, 1);
 
     logger.info('Geocoding Success', { count: finalResults.length });
     return NextResponse.json({ results: finalResults });
