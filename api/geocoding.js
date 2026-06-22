@@ -57,7 +57,7 @@ export default async function handler(req, res) {
 
     const finalResults = scoredResults
       .sort((a, b) => b._score - a._score)
-      .slice(0, 3);
+      .slice(0, 1);
 
     return res.status(200).json({ results: finalResults });
   } catch (error) {
