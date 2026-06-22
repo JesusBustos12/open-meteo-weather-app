@@ -391,8 +391,8 @@ function initLogin() {
         });
     });
 
-    /* Activar tab de registro por defecto (igual que la imagen) */
-    activarTab(dom.tabRegistro);
+    /* Activar tab de inicio de sesión por defecto */
+    activarTab(dom.tabLogin);
 }
 
 document.addEventListener('DOMContentLoaded', initLogin);

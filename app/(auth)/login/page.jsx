@@ -10,7 +10,7 @@ export default function LoginPage() {
   const { setLanguage } = useStore();
   const { t, language } = useTranslation();
   
-  const [activeTab, setActiveTab] = useState('registro'); // 'login' | 'registro'
+  const [activeTab, setActiveTab] = useState('login'); // 'login' | 'registro'
   const [feedback, setFeedback] = useState({ msg: '', type: '', visible: false });
   const [loading, setLoading] = useState(false);
   
