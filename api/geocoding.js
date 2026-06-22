@@ -37,14 +37,17 @@ export default async function handler(req, res) {
       const nameNorm = normalize(item.name);
 
       if (item.population) {
-        score += Math.log10(item.population) * 25;
+        score += Math.log10(item.population) * 100;
       }
 
       const f = item.feature_code || '';
       if (f === 'PCLI') score += 2000;
-      else if (f === 'PPLC') score += 1000;
-      else if (f === 'PPLA') score += 500;
-      else if (f.startsWith('PPLA')) score += 200;
+      else if (f === 'PPLC') score += 1500;
+      else if (f === 'ADM1') score += 1000;
+      else if (f === 'PPLA') score += 800;
+      else if (f === 'ADM2' || f === 'ADM3') score += 500;
+      else if (f.startsWith('PPLA')) score += 400;
+      else if (f.startsWith('PPL')) score += 300;
 
       if (nameNorm === queryNorm) {
         score += 500;
@@ -57,7 +60,7 @@ export default async function handler(req, res) {
 
     const finalResults = scoredResults
       .sort((a, b) => b._score - a._score)
-      .slice(0, 1);
+      .slice(0, 2);
 
     return res.status(200).json({ results: finalResults });
   } catch (error) {

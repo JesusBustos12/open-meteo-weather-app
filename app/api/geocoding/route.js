@@ -40,16 +40,18 @@ export async function GET(req) {
       
       // 1. Puntos por población (escala logarítmica pesiva)
       if (item.population) {
-        score += Math.log10(item.population) * 25;
+        score += Math.log10(item.population) * 100;
       }
 
       // 2. Puntos por tipo de entidad (GeoNames codes)
-      // PCLI = País, PPLC = Capital, PPLA = Centro admin nivel 1
       const f = item.feature_code || '';
       if (f === 'PCLI') score += 2000;
-      else if (f === 'PPLC') score += 1000;
-      else if (f === 'PPLA') score += 500;
-      else if (f.startsWith('PPLA')) score += 200;
+      else if (f === 'PPLC') score += 1500;
+      else if (f === 'ADM1') score += 1000;
+      else if (f === 'PPLA') score += 800;
+      else if (f === 'ADM2' || f === 'ADM3') score += 500;
+      else if (f.startsWith('PPLA')) score += 400;
+      else if (f.startsWith('PPL')) score += 300;
 
       // 3. Puntos por coincidencia de nombre (normalizado)
       if (nameNorm === queryNorm) {
@@ -61,10 +63,10 @@ export async function GET(req) {
       return { ...item, _score: score };
     });
 
-    // Ordenar por puntuación descendente y devolver solo la mejor opción
+    // Ordenar por puntuación descendente y devolver solo las 2 mejores opciones
     const finalResults = scoredResults
       .sort((a, b) => b._score - a._score)
-      .slice(0, 1);
+      .slice(0, 2);
 
     logger.info('Geocoding Success', { count: finalResults.length });
     return NextResponse.json({ results: finalResults });
