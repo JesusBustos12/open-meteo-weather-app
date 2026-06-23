@@ -195,7 +195,29 @@
 
 /* --- Sugerencias dropdown sombra --- */
 [data-theme="light"] .sugerencias {
-  box-shadow: 0 4px 24px rgba(20, 40, 60, 0.12);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  border-color: #E2E8F0;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .sugerencia-item {
+  color: var(--color-texto);
+}
+
+[data-theme="light"] .sugerencia-item .material-symbols-outlined {
+  color: var(--color-texto-3);
+}
+
+[data-theme="light"] .sugerencia-item:hover,
+[data-theme="light"] .sugerencia-item--activo {
+  background: rgba(0, 102, 204, 0.08); /* Usando el azul intenso (#0066CC en RGBA) */
+  color: var(--color-primario);
+}
+
+[data-theme="light"] .sugerencia-item:hover .material-symbols-outlined,
+[data-theme="light"] .sugerencia-item--activo .material-symbols-outlined {
+  color: var(--color-primario);
 }
 
 /* --- Heatmap hover (versión light) --- */
