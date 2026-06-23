@@ -212,20 +212,38 @@ async function manejarLogin(e) {
 
     if (!ok) return;
 
+    const btnLogin = document.getElementById('btn-login');
+    const spanIcono = btnLogin.querySelector('.material-symbols-outlined');
+    const spanTexto = btnLogin.querySelector('span:not(.material-symbols-outlined)');
+    const textoOriginal = spanTexto.textContent;
+    const iconoOriginal = spanIcono.textContent;
+
+    btnLogin.disabled = true;
+    spanTexto.textContent = t('guardando') ? t('guardando').toUpperCase() : 'GUARDANDO';
+    spanIcono.textContent = 'sync';
+    spanIcono.classList.add('icono-cargando');
+
     try {
         const data = await apiPost('/api/auth/login', { email, password });
         
         if (data.error) {
             mostrarFeedback(dom.loginFeedback, t(data.error === 'Credenciales inválidas' ? 'err_pass_inc' : 'err_no_cuenta'), 'error');
+            btnLogin.disabled = false;
+            spanTexto.textContent = textoOriginal;
+            spanIcono.textContent = iconoOriginal;
+            spanIcono.classList.remove('icono-cargando');
             return;
         }
 
         /* Éxito */
         mostrarFeedback(dom.loginFeedback, t('exito_bienvenido'), 'exito');
-        document.getElementById('btn-login').disabled = true;
         setTimeout(() => window.location.replace('dashboard.html'), 1000);
     } catch (err) {
         mostrarFeedback(dom.loginFeedback, 'Error de conexión con el servidor', 'error');
+        btnLogin.disabled = false;
+        spanTexto.textContent = textoOriginal;
+        spanIcono.textContent = iconoOriginal;
+        spanIcono.classList.remove('icono-cargando');
     }
 }
 
@@ -281,6 +299,17 @@ async function manejarRegistro(e) {
 
     if (!ok) return;
 
+    const btnRegistro = document.getElementById('btn-registro');
+    const spanIcono = btnRegistro.querySelector('.material-symbols-outlined');
+    const spanTexto = btnRegistro.querySelector('span:not(.material-symbols-outlined)');
+    const textoOriginal = spanTexto.textContent;
+    const iconoOriginal = spanIcono.textContent;
+
+    btnRegistro.disabled = true;
+    spanTexto.textContent = t('guardando') ? t('guardando').toUpperCase() : 'GUARDANDO';
+    spanIcono.textContent = 'sync';
+    spanIcono.classList.add('icono-cargando');
+
     try {
         const data = await apiPost('/api/auth/register', { 
             name, 
@@ -292,15 +321,22 @@ async function manejarRegistro(e) {
         if (data.error) {
             mostrarFeedback(dom.regFeedback, data.error, 'error');
             if (data.error.includes('email')) setError(dom.regEmail, emailErr, data.error);
+            btnRegistro.disabled = false;
+            spanTexto.textContent = textoOriginal;
+            spanIcono.textContent = iconoOriginal;
+            spanIcono.classList.remove('icono-cargando');
             return;
         }
 
         /* Éxito */
         mostrarFeedback(dom.regFeedback, t('exito_cuenta'), 'exito');
-        document.getElementById('btn-registro').disabled = true;
         setTimeout(() => window.location.replace('dashboard.html'), 1000);
     } catch (err) {
         mostrarFeedback(dom.regFeedback, 'Error al conectar con el servidor', 'error');
+        btnRegistro.disabled = false;
+        spanTexto.textContent = textoOriginal;
+        spanIcono.textContent = iconoOriginal;
+        spanIcono.classList.remove('icono-cargando');
     }
 }
 

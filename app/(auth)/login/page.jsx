@@ -214,7 +214,9 @@ export default function LoginPage() {
 
                         <button type="submit" className="btn-submit" disabled={loading}>
                             <span>{loading ? t('guardando').toUpperCase() : t('btn_login')}</span>
-                            <span className="material-symbols-outlined" aria-hidden="true">login</span>
+                            <span className={`material-symbols-outlined ${loading ? 'icono-cargando' : ''}`} aria-hidden="true">
+                                {loading ? 'sync' : 'login'}
+                            </span>
                         </button>
                     </form>
                 </section>
@@ -314,7 +316,9 @@ export default function LoginPage() {
 
                         <button type="submit" className="btn-submit" disabled={loading}>
                             <span>{loading ? t('guardando').toUpperCase() : t('btn_registro')}</span>
-                            <span className="material-symbols-outlined" aria-hidden="true">person_add</span>
+                            <span className={`material-symbols-outlined ${loading ? 'icono-cargando' : ''}`} aria-hidden="true">
+                                {loading ? 'sync' : 'person_add'}
+                            </span>
                         </button>
                         <p className="aviso">
                             <span className="material-symbols-outlined" aria-hidden="true">shield</span>

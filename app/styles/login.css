@@ -632,6 +632,15 @@ a {
     font-size: 2.2rem;
 }
 
+.icono-cargando {
+    animation: girar 1s linear infinite;
+}
+
+@keyframes girar {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
 /* ===== AVISO ===== */
 .aviso {
     display: flex;
