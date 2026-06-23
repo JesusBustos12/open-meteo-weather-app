@@ -69,9 +69,9 @@
   --color-borde-sutil: rgba(226, 232, 240, 0.6);
   --color-input-bg: #FFFFFF;
 
-  --color-primario: #1BBFD0;
-  --color-primario-dim: rgba(27, 191, 208, 0.08);
-  --color-primario-borde: rgba(27, 191, 208, 0.2);
+  --color-primario: #0066CC;
+  --color-primario-dim: rgba(0, 102, 204, 0.08);
+  --color-primario-borde: rgba(0, 102, 204, 0.2);
 
   --color-texto: #1E293B;
   --color-texto-2: #475569;

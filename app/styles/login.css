@@ -63,9 +63,9 @@
     --color-input-bg: #FFFFFF;
     --color-input-borde: #E2E8F0;
 
-    --color-acento: #1BBFD0;
-    --color-acento-hover: #17A8B8;
-    --color-acento-dim: rgba(27, 191, 208, 0.1);
+    --color-acento: #0066CC;
+    --color-acento-hover: #0052A3;
+    --color-acento-dim: rgba(0, 102, 204, 0.1);
     --color-acento-texto: #FFFFFF;
 
     --color-texto: #1E293B;
