@@ -253,7 +253,7 @@ export default function LeafletMap({ location, currentTemp = 20 }) {
             className={`mapa__ctrl-btn ${showThermal ? 'activo' : ''}`} 
             aria-label="Capa Termal y Clima"
             onClick={() => setShowThermal(!showThermal)}
-            title="Activar Capa Termal"
+            data-tooltip="Activar Capa Termal"
           >
               <span className="material-symbols-outlined" aria-hidden="true">layers</span>
           </button>
@@ -262,7 +262,7 @@ export default function LeafletMap({ location, currentTemp = 20 }) {
             className={`mapa__ctrl-btn ${layerType === 'satellite' ? 'activo' : ''}`} 
             aria-label="Vista satélite"
             onClick={() => setLayerType(layerType === 'satellite' ? 'dark' : 'satellite')}
-            title="Vista Satélite"
+            data-tooltip="Vista Satélite"
           >
               <span className="material-symbols-outlined" aria-hidden="true">satellite_alt</span>
           </button>
@@ -270,7 +270,7 @@ export default function LeafletMap({ location, currentTemp = 20 }) {
             type="button"
             className="mapa__ctrl-btn" 
             aria-label="Centrar en mi ciudad" 
-            title="Reubicar ciudad"
+            data-tooltip="Reubicar ciudad"
             onClick={(e) => {
               e.preventDefault();
               recenterMap();
