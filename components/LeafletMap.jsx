@@ -253,7 +253,7 @@ export default function LeafletMap({ location, currentTemp = 20 }) {
             className={`mapa__ctrl-btn ${showThermal ? 'activo' : ''}`} 
             aria-label="Capa Termal y Clima"
             onClick={() => setShowThermal(!showThermal)}
-            data-tooltip="Activar Capa Termal"
+            data-tooltip="Térmico"
           >
               <span className="material-symbols-outlined" aria-hidden="true">layers</span>
           </button>
