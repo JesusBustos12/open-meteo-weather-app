@@ -1392,6 +1392,9 @@ function mapaNavegar(lat, lon, nombre) {
   const map = mapaState.instancia;
   if (!map) return;
 
+  lat = Number(lat) || 0;
+  lon = Number(lon) || 0;
+
   mapaState.coordActual = { lat, lon, nombre };
 
   // Recalcular tamaño por si el layout cambió
@@ -1423,11 +1426,9 @@ function mapaNavegar(lat, lon, nombre) {
   });
 
   const marcador = L.marker([lat, lon], { icon: svgIcon }).addTo(map);
-  const latNum = Number(lat) || 0;
-  const lonNum = Number(lon) || 0;
   marcador.bindPopup(
     `<strong style="font-size:1.3rem">${nombre}</strong><br>
-     <span style="font-size:1.1rem;color:#64748b">${latNum.toFixed(4)}, ${lonNum.toFixed(4)}</span>`,
+     <span style="font-size:1.1rem;color:#64748b">${lat.toFixed(4)}, ${lon.toFixed(4)}</span>`,
     { className: 'mapa__popup', offset: [0, -10] }
   ).openPopup();
 
