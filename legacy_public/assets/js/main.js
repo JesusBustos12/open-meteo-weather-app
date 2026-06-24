@@ -394,18 +394,46 @@ async function guardarPerfil(e) {
   const emailNuevo = dom.inputEmail.value.trim();
   const passNuevo = dom.inputPass.value;
 
+  const btnGuardar = document.getElementById('btn-guardar-perfil');
+  const spanIcono = btnGuardar.querySelector('.material-symbols-outlined');
+  const spanTexto = btnGuardar.querySelector('span:not(.material-symbols-outlined)');
+  const textoOriginal = spanTexto.textContent;
+  const iconoOriginal = spanIcono.textContent;
+
+  // Iniciar estado de carga
+  btnGuardar.disabled = true;
+  spanTexto.textContent = t('guardando') ? t('guardando') : 'Guardando...';
+  spanIcono.textContent = 'sync';
+  spanIcono.classList.add('icono-cargando');
+
   try {
+    // Simular tiempo de carga
+    await new Promise(r => setTimeout(r, 800));
+
     // Actualizar perfil local
     estado.perfil = { nombre, avatar, email: emailNuevo || estado.perfil.email };
     lsSet(LS_PERFIL, estado.perfil);
     renderizarPerfil();
 
     mostrarFeedbackModal(t('perfil_guardado'), 'exito');
-    setTimeout(cerrarModalPerfil, 1200);
+    setTimeout(() => {
+        cerrarModalPerfil();
+        // Restaurar botón después de cerrar
+        btnGuardar.disabled = false;
+        spanTexto.textContent = textoOriginal;
+        spanIcono.textContent = iconoOriginal;
+        spanIcono.classList.remove('icono-cargando');
+    }, 1200);
 
   } catch (err) {
     console.error('Error actualizando perfil:', err);
     mostrarFeedbackModal('Error local al guardar', 'error');
+    
+    // Restaurar botón en caso de error
+    btnGuardar.disabled = false;
+    spanTexto.textContent = textoOriginal;
+    spanIcono.textContent = iconoOriginal;
+    spanIcono.classList.remove('icono-cargando');
   }
 }
 
