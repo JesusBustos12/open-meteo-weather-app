@@ -46,12 +46,6 @@ export default async function handler(req, res) {
     const userId = result.insertId;
     await pool.execute('INSERT INTO user_preferences (user_id) VALUES (?)', [userId]);
 
-    const token = jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
-
-    // Cookie segura
-    const secure = process.env.NODE_ENV === 'production' ? 'Secure;' : '';
-    res.setHeader('Set-Cookie', `token=${token}; HttpOnly; ${secure} SameSite=Strict; Max-Age=${7 * 24 * 60 * 60}; Path=/`);
-
     return res.status(201).json({ success: true, user: { name, email, avatar } });
   } catch (error) {
     if (error.code === 'ER_DUP_ENTRY') {
