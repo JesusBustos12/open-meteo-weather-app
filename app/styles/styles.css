@@ -409,16 +409,17 @@ ul {
 }
 
 .sidebar__title {
-  font-size: 2rem;
+  font-size: 2.6rem;
   font-weight: 700;
   color: var(--color-texto);
   line-height: 1;
 }
 
 .sidebar__version {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   color: var(--color-texto-4);
   padding-left: 0.4rem;
+  margin-top: 0.75rem;
 }
 
 /* Nav */
@@ -1031,12 +1032,15 @@ ul {
   height: calc(100vh - var(--header-h));
   overflow: hidden;
   transition: grid-template-columns 0.4s ease;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE/Edge */
 }
 
 .segmented-workspace::-webkit-scrollbar {
-  display: none; /* Chrome/Safari */
+  display: none;
+  /* Chrome/Safari */
 }
 
 .zona-1,
@@ -1835,12 +1839,15 @@ ul {
 .tabla-horas-wrapper {
   flex: 1;
   overflow-y: auto;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE/Edge */
 }
 
 .tabla-horas-wrapper::-webkit-scrollbar {
-  display: none; /* Chrome/Safari */
+  display: none;
+  /* Chrome/Safari */
 }
 
 .tabla-horas {

@@ -211,7 +211,8 @@
 
 [data-theme="light"] .sugerencia-item:hover,
 [data-theme="light"] .sugerencia-item--activo {
-  background: rgba(0, 71, 212, 0.08); /* Azul más intenso y vivo */
+  background: rgba(0, 71, 212, 0.08);
+  /* Azul más intenso y vivo */
   color: var(--color-primario);
 }
 
@@ -695,7 +696,8 @@ ul {
   left: 0;
   z-index: 1;
   color: var(--color-texto-4);
-  opacity: 0.45; /* Aumentado para mejor visibilidad */
+  opacity: 0.45;
+  /* Aumentado para mejor visibilidad */
   pointer-events: none;
   border: none;
   /* Sincronización exacta con el input real */
@@ -762,8 +764,10 @@ ul {
   top: calc(100% + 0.8rem);
   left: 0;
   right: 0;
-  background: rgba(15, 23, 42, 0.85); /* Fondo oscuro translúcido */
-  backdrop-filter: blur(12px);         /* Efecto cristal */
+  background: rgba(15, 23, 42, 0.85);
+  /* Fondo oscuro translúcido */
+  backdrop-filter: blur(12px);
+  /* Efecto cristal */
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--color-borde);
   border-radius: var(--radio-md);
@@ -774,8 +778,15 @@ ul {
 }
 
 @keyframes sug-aparecer {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .sugerencia-item {
@@ -793,7 +804,8 @@ ul {
 .sugerencia-item--activo {
   background: rgba(29, 208, 237, 0.15);
   color: var(--color-primario);
-  padding-left: 2rem; /* Sutil movimiento al seleccionar */
+  padding-left: 2rem;
+  /* Sutil movimiento al seleccionar */
 }
 
 .sugerencia-item .material-symbols-outlined {
@@ -1124,12 +1136,10 @@ ul {
 /* Skeleton Loaders */
 .skeleton {
   background: var(--color-zona-2);
-  background: linear-gradient(
-    90deg,
-    var(--color-zona-1) 25%,
-    var(--color-borde) 50%,
-    var(--color-zona-1) 75%
-  );
+  background: linear-gradient(90deg,
+      var(--color-zona-1) 25%,
+      var(--color-borde) 50%,
+      var(--color-zona-1) 75%);
   background-size: 200% 100%;
   animation: skeleton-loading 1.5s infinite;
   border-radius: var(--radio-sm);
@@ -1164,6 +1174,7 @@ ul {
   0% {
     background-position: 200% 0;
   }
+
   100% {
     background-position: -200% 0;
   }
@@ -1222,8 +1233,15 @@ ul {
 }
 
 @keyframes aparecer {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Tarjetas individuales */
@@ -2656,5 +2674,9 @@ ul {
     display: none;
   }
 }
-img.sidebar__logo-icon { width: 32px; height: 32px; object-fit: contain; }
 
+img.sidebar__logo-icon {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+}
