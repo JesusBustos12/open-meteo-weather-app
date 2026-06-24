@@ -53,6 +53,9 @@ self.addEventListener('fetch', (event) => {
     // IGNORAR PETICIONES NO-GET (evita TypeError en POST/PUT y permite que el backend las reciba)
     if (event.request.method !== 'GET') return;
 
+    // Permitir al navegador manejar las navegaciones directamente para evitar errores con redirecciones (ej. Vercel)
+    if (event.request.mode === 'navigate') return;
+
     const url = new URL(event.request.url);
 
     // 1. API Proxiadas (/api/): Network First, fallback to cache
