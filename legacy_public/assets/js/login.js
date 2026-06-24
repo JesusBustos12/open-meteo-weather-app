@@ -8,20 +8,6 @@
 
 'use strict';
 
-/* ===== CLAVES localStorage ===== */
-const LS_USUARIOS = 'wa_usuarios';
-const LS_SESION = 'wa_sesion';
-const LS_PERFIL = 'wa_perfil';
-const LS_TEMA = 'wa_tema';
-
-/* ===== UTILIDADES ===== */
-function lsGet(clave) {
-    try { return JSON.parse(localStorage.getItem(clave)); } catch { return null; }
-}
-function lsSet(clave, valor) {
-    try { localStorage.setItem(clave, JSON.stringify(valor)); } catch { }
-}
-
 function mostrar(el) { el.hidden = false; }
 function ocultar(el) { el.hidden = true; }
 
@@ -32,9 +18,13 @@ function aplicarTema() {
 
 /* ===== GUARDIA DE SESIÓN ===== */
 async function verificarSesion() {
-    const sesion = lsGet(LS_SESION);
-    if (sesion && sesion.activa) {
-        window.location.replace('dashboard.html');
+    try {
+        const res = await fetch('/api/user/sync');
+        if (res.ok) {
+            window.location.replace('dashboard.html');
+        }
+    } catch (err) {
+        // Ignorar error de red
     }
 }
 
@@ -260,10 +250,6 @@ async function manejarLogin(e) {
         }
 
         /* Éxito */
-        lsSet(LS_SESION, { activa: true, email: data.user.email, token: 'jwt_managed_by_cookies' });
-        // Sincronizar perfil actual temporalmente para la UI
-        lsSet(LS_PERFIL, { nombre: data.user.name, avatar: data.user.avatar, email: data.user.email });
-        
         mostrarFeedback(dom.loginFeedback, t('exito_bienvenido'), 'exito');
         setTimeout(() => window.location.replace('dashboard.html'), 1000);
     } catch (err) {

@@ -9,12 +9,7 @@
    ===================================================== */
 const API_METEO = '/api/weather';
 const API_GEO = '/api/geocoding';
-const LS_CIUDADES = 'wa_ciudades';
-const LS_TEMA = 'wa_tema';
-/* LS_IDIOMA definido en i18n.js */
-const LS_PERFIL = 'wa_perfil';
-const LS_ULTIMA = 'wa_ultima_busqueda';
-const LS_SESION = 'wa_sesion';
+// No localStorage variables
 
 /* Códigos WMO → descripción e icono */
 const CODIGOS_CLIMA = {
@@ -86,13 +81,7 @@ const AppLogger = {
     this._enviarTelemetria(entrada);
   },
   _enviarTelemetria(data) {
-    // En un entorno real: fetch('/api/logs', { method: 'POST', body: JSON.stringify(data) })
-    // Por ahora, solo guardamos un rastro en localStorage de forma limitada
-    try {
-      const historial = JSON.parse(localStorage.getItem('wa_telemetria')) || [];
-      historial.push(data);
-      localStorage.setItem('wa_telemetria', JSON.stringify(historial.slice(-10))); // Solo últimos 10
-    } catch (e) {}
+    // (Deshabilitado: sin localStorage)
   }
 };
 
@@ -212,12 +201,7 @@ function formatearHora(isoString) {
   });
 }
 
-function lsGet(clave) {
-  try { return JSON.parse(localStorage.getItem(clave)); } catch { return null; }
-}
-function lsSet(clave, valor) {
-  try { localStorage.setItem(clave, JSON.stringify(valor)); } catch { /* silencioso */ }
-}
+// lsGet y lsSet eliminados
 
 function mostrar(el) { if (el) el.hidden = false; }
 function ocultar(el) { if (el) el.hidden = true; }
@@ -283,8 +267,14 @@ function aplicarTema() {
 
 async function cambiarTema(esDark) {
   estado.tema = esDark ? 'dark' : 'light';
-  lsSet('wa_tema', estado.tema);
   aplicarTema();
+
+  // Sincronizar con la base de datos en la nube (sin bloquear)
+  fetch('/api/user/config', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ theme: estado.tema })
+  }).catch(() => {});
 }
 
 /* =====================================================
@@ -409,15 +399,28 @@ async function guardarPerfil(e) {
   spanIcono.classList.add('icono-cargando');
 
   try {
-    // Simular tiempo de carga
-    await new Promise(r => setTimeout(r, 800));
+    // API Call para actualizar perfil
+    const response = await fetch('/api/user/profile', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        nombre, 
+        avatar, 
+        email: emailNuevo || undefined,
+        password: passNuevo || undefined 
+      })
+    });
+    
+    if (!response.ok) {
+      const errData = await response.json();
+      throw new Error(errData.error || 'Error al guardar perfil en la nube');
+    }
 
-    // Actualizar perfil local
+    // Actualizar perfil local en memoria
     estado.perfil = { nombre, avatar, email: emailNuevo || estado.perfil.email };
-    lsSet(LS_PERFIL, estado.perfil);
     renderizarPerfil();
 
-    mostrarFeedbackModal(t('perfil_guardado'), 'exito');
+    mostrarFeedbackModal(t('perfil_guardado') || 'Perfil guardado', 'exito');
     setTimeout(() => {
         cerrarModalPerfil();
         // Restaurar botón después de cerrar
@@ -697,7 +700,6 @@ async function cargarClima({ ciudad, region, lat, lon }) {
     const data = await resp.json();
 
     estado.ultimaBusqueda = { ciudad, region, lat, lon };
-    lsSet(LS_ULTIMA, estado.ultimaBusqueda);
     estado.ultimosHourly = data.hourly;
 
     ocultarLoader();
@@ -993,8 +995,6 @@ function manejarErrorGlobal(error, contexto = 'General') {
    LOCALIDADES GUARDADAS
    ===================================================== */
 function cargarCiudadesGuardadas() {
-  const guardadas = lsGet(LS_CIUDADES);
-  estado.ciudadesGuardadas = Array.isArray(guardadas) ? guardadas : [];
   renderizarLocalidades();
 }
 
@@ -1050,16 +1050,26 @@ async function guardarCiudad() {
   if (existe) return;
 
   estado.ciudadesGuardadas.push({ ciudad, region, lat, lon });
-  lsSet('wa_ciudades', estado.ciudadesGuardadas);
   renderizarLocalidades();
-  mostrarFeedbackCiudad(t('ciudad_guardada'), 'exito');
+  mostrarFeedbackCiudad(t('ciudad_guardada') || 'Ciudad guardada', 'exito');
+
+  // Guardar en la nube (TiDB) sin bloquear la UI
+  fetch('/api/user/cities', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: ciudad, latitude: lat, longitude: lon })
+  }).catch(() => {});
 }
 
 /** Elimina una ciudad de favoritos */
 async function eliminarCiudad(nombre) {
   estado.ciudadesGuardadas = estado.ciudadesGuardadas.filter(c => c.ciudad !== nombre);
-  lsSet('wa_ciudades', estado.ciudadesGuardadas);
   renderizarLocalidades();
+
+  // Eliminar en la nube (TiDB)
+  fetch(`/api/user/cities?name=${encodeURIComponent(nombre)}`, {
+    method: 'DELETE'
+  }).catch(() => {});
 }
 
 function mostrarFeedbackCiudad(msg, tipo) {
@@ -1090,33 +1100,55 @@ function cerrarSidebarMovil() {
 
 /** Cierra la sesión de usuario y limpia el servidor */
 async function cerrarSesion() {
-  lsSet('wa_sesion', null);
+  try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+  } catch(e) {}
   window.location.replace('login.html');
 }
 
 /** Verifica si hay sesión activa y sincroniza estado global con DB */
 async function verificarSesion() {
-  const sesion = lsGet('wa_sesion');
-  if (!sesion || !sesion.activa) {
-      window.location.replace('login.html');
-      return;
-  }
-  
-  // Sincronizar estado global desde localStorage
-  const perfil = lsGet('wa_perfil') || {};
-  estado.perfil = { 
-      nombre: perfil.nombre || sesion.email, 
-      avatar: perfil.avatar || '',
-      email: perfil.email || sesion.email
-  };
-  estado.tema = lsGet('wa_tema') || 'dark';
-  estado.ciudadesGuardadas = lsGet('wa_ciudades') || [];
+  try {
+      const res = await fetch('/api/user/sync');
+      if (!res.ok) throw new Error('No autorizado');
+      const data = await res.json();
+      
+      estado.perfil = { 
+          nombre: data.profile?.name || data.profile?.email || 'Usuario', 
+          avatar: data.profile?.avatar || '',
+          email: data.profile?.email || ''
+      };
+      
+      if (data.preferences?.theme) {
+          estado.tema = data.preferences.theme;
+      }
+      
+      if (data.preferences?.language) {
+          setIdiomaDesdeBackend(data.preferences.language);
+          estado.idioma = data.preferences.language;
+      }
 
-  // Aplicar a UI inmediatamente
-  aplicarTema();
-  aplicarIdioma();
-  cargarPerfil();
-  renderizarLocalidades();
+      estado.ciudadesGuardadas = data.cities?.map(c => ({
+          ciudad: c.name,
+          region: '',
+          lat: c.latitude,
+          lon: c.longitude
+      })) || [];
+
+      // Aplicar a UI inmediatamente
+      aplicarTema();
+      aplicarIdioma();
+      cargarPerfil();
+      renderizarLocalidades();
+      
+      // Reemplazo de LS_ULTIMA: Cargar la primera ciudad de la lista si no hay búsqueda previa
+      if (estado.ciudadesGuardadas.length > 0) {
+          estado.ultimaBusqueda = estado.ciudadesGuardadas[0];
+          cargarClima(estado.ultimaBusqueda);
+      }
+  } catch(err) {
+      window.location.replace('login.html');
+  }
 }
 
 /* =====================================================
@@ -1152,12 +1184,7 @@ async function initApp() {
     }
   });
 
-  const ultimaBusqueda = lsGet(LS_ULTIMA);
-  /* Restaurar última búsqueda */
-  if (ultimaBusqueda) {
-    estado.ultimaBusqueda = ultimaBusqueda;
-    cargarClima(ultimaBusqueda);
-  }
+  // (Ya no usamos LS_ULTIMA, la última búsqueda se gestiona en verificarSesion)
 
   /* ===== EVENTOS ===== */
 

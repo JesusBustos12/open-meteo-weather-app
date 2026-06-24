@@ -5,8 +5,7 @@
    ===================================================== */
 'use strict';
 
-const LS_IDIOMA = 'wa_idioma';
-
+let currentIdioma = 'es';
 /* ===== DICCIONARIO COMPLETO ===== */
 const I18N = {
     es: {
@@ -226,11 +225,9 @@ const I18N = {
 
 /* ===== FUNCIONES COMPARTIDAS ===== */
 
-/** Obtiene el idioma actual guardado (default: 'es') */
+/** Obtiene el idioma actual */
 function obtenerIdiomaActual() {
-    try {
-        return JSON.parse(localStorage.getItem(LS_IDIOMA)) || 'es';
-    } catch { return 'es'; }
+    return currentIdioma;
 }
 
 /** Traduce una clave al idioma actual */
@@ -265,8 +262,21 @@ function aplicarTraducciones() {
 
 /** Cambia el idioma, lo guarda y aplica */
 function cambiarIdiomaGlobal(nuevoIdioma) {
-    try {
-        localStorage.setItem(LS_IDIOMA, JSON.stringify(nuevoIdioma));
-    } catch { }
+    currentIdioma = nuevoIdioma;
     aplicarTraducciones();
+    
+    // Sincronizar en la nube sin bloquear
+    fetch('/api/user/config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language: nuevoIdioma })
+    }).catch(() => {});
+}
+
+/** Inyecta el idioma desde la base de datos (llamado desde main.js) */
+function setIdiomaDesdeBackend(idioma) {
+    if (idioma && (idioma === 'es' || idioma === 'en')) {
+        currentIdioma = idioma;
+        aplicarTraducciones();
+    }
 }
