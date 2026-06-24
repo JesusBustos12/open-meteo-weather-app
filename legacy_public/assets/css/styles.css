@@ -69,9 +69,9 @@
   --color-borde-sutil: rgba(200, 215, 228, 0.5);
   --color-input-bg: #FAFCFD;
 
-  --color-primario: #0066CC;
-  --color-primario-dim: rgba(0, 102, 204, 0.08);
-  --color-primario-borde: rgba(0, 102, 204, 0.2);
+  --color-primario: #0047D4;
+  --color-primario-dim: rgba(0, 71, 212, 0.08);
+  --color-primario-borde: rgba(0, 71, 212, 0.2);
 
   --color-texto: #1A2B3C;
   --color-texto-2: #4A6070;
@@ -211,7 +211,7 @@
 
 [data-theme="light"] .sugerencia-item:hover,
 [data-theme="light"] .sugerencia-item--activo {
-  background: rgba(0, 102, 204, 0.08); /* Usando el azul intenso (#0066CC en RGBA) */
+  background: rgba(0, 71, 212, 0.08); /* Azul más intenso y vivo */
   color: var(--color-primario);
 }
 
