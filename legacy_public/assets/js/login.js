@@ -27,14 +27,18 @@ function ocultar(el) { el.hidden = true; }
 
 /* ===== TEMA ===== */
 function aplicarTema() {
-    document.documentElement.dataset.theme = lsGet(LS_TEMA) || 'dark';
+    document.documentElement.dataset.theme = 'dark';
 }
 
 /* ===== GUARDIA DE SESIÓN ===== */
-function verificarSesion() {
-    const sesion = lsGet(LS_SESION);
-    if (sesion && sesion.activa) {
-        window.location.replace('dashboard.html');
+async function verificarSesion() {
+    try {
+        const res = await fetch('/api/user/sync');
+        if (res.ok) {
+            window.location.replace('dashboard.html');
+        }
+    } catch (err) {
+        // Sin sesión, quedarse en login
     }
 }
 
@@ -70,6 +74,10 @@ function cachearDOM() {
     /* Toggle idioma */
     dom.btnIdiomaEs = document.getElementById('btn-idioma-es');
     dom.btnIdiomaEn = document.getElementById('btn-idioma-en');
+
+    /* Modal Registro */
+    dom.modalRegistro = document.getElementById('modal-registro');
+    dom.btnCerrarModalReg = document.getElementById('btn-cerrar-modal-reg');
 }
 
 /* ===== IDIOMA ===== */
@@ -167,6 +175,26 @@ function mostrarFeedback(el, msg, tipo) {
     mostrar(el);
 }
 function ocultarFeedback(el) { ocultar(el); }
+
+/* ===== MODAL DE REGISTRO ===== */
+function mostrarModalRegistro(exito, mensaje) {
+    const icono = dom.modalRegistro.querySelector('.modal-icon');
+    const titulo = dom.modalRegistro.querySelector('.modal-title');
+    const desc = dom.modalRegistro.querySelector('.modal-desc');
+
+    // Resetear clases por si acaso
+    icono.style.color = exito ? 'var(--color-exito)' : 'var(--color-error)';
+    icono.style.filter = exito ? 'drop-shadow(0 0 12px var(--color-borde-exito))' : 'drop-shadow(0 0 12px var(--color-borde-error))';
+    icono.textContent = exito ? 'check_circle' : 'error';
+    
+    titulo.textContent = exito ? t('modal_reg_exito_titulo') || '¡Registro Exitoso!' : 'Error de Registro';
+    desc.textContent = mensaje;
+    
+    // Guardamos estado para cuando cierre el modal saber si redirigir o no
+    dom.modalRegistro.dataset.exito = exito ? 'true' : 'false';
+
+    mostrar(dom.modalRegistro);
+}
 
 /* ===== AUTH API ===== */
 async function apiPost(url, data) {
@@ -319,24 +347,28 @@ async function manejarRegistro(e) {
         });
 
         if (data.error) {
-            mostrarFeedback(dom.regFeedback, data.error, 'error');
-            if (data.error.includes('email')) setError(dom.regEmail, emailErr, data.error);
             btnRegistro.disabled = false;
             spanTexto.textContent = textoOriginal;
             spanIcono.textContent = iconoOriginal;
             spanIcono.classList.remove('icono-cargando');
+            if (data.error.includes('email')) setError(dom.regEmail, emailErr, data.error);
+            mostrarModalRegistro(false, data.error);
             return;
         }
 
         /* Éxito */
-        mostrarFeedback(dom.regFeedback, t('exito_cuenta'), 'exito');
-        setTimeout(() => window.location.replace('dashboard.html'), 1000);
-    } catch (err) {
-        mostrarFeedback(dom.regFeedback, 'Error al conectar con el servidor', 'error');
         btnRegistro.disabled = false;
         spanTexto.textContent = textoOriginal;
         spanIcono.textContent = iconoOriginal;
         spanIcono.classList.remove('icono-cargando');
+        
+        mostrarModalRegistro(true, t('modal_reg_exito_desc') || 'Tu cuenta ha sido creada correctamente. Ahora puedes iniciar sesión.');
+    } catch (err) {
+        btnRegistro.disabled = false;
+        spanTexto.textContent = textoOriginal;
+        spanIcono.textContent = iconoOriginal;
+        spanIcono.classList.remove('icono-cargando');
+        mostrarModalRegistro(false, 'Error al conectar con el servidor. Por favor, verifica tu conexión.');
     }
 }
 
@@ -429,6 +461,24 @@ function initLogin() {
 
     /* Activar tab de inicio de sesión por defecto */
     activarTab(dom.tabLogin);
+
+    /* Cerrar modal de registro y preparar login */
+    if (dom.btnCerrarModalReg) {
+        dom.btnCerrarModalReg.addEventListener('click', () => {
+            ocultar(dom.modalRegistro);
+            
+            // Si fue exitoso, cambiar al tab de login
+            if (dom.modalRegistro.dataset.exito === 'true') {
+                activarTab(dom.tabLogin);
+                if (dom.regEmail.value) {
+                    dom.loginEmail.value = dom.regEmail.value.trim();
+                    dom.loginPass.focus();
+                }
+                dom.formReg.reset();
+                mostrarAvatar('');
+            }
+        });
+    }
 }
 
 document.addEventListener('DOMContentLoaded', initLogin);

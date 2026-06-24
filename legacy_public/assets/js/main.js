@@ -309,9 +309,6 @@ async function cambiarTema(esDark) {
    ===================================================== */
 
 function cargarPerfil() {
-  /* Intentar mesclar datos guardados con los de la sesión de login */
-  const perfilGuardado = lsGet(LS_PERFIL);
-  if (perfilGuardado) estado.perfil = perfilGuardado;
   renderizarPerfil();
 }
 
@@ -376,16 +373,8 @@ function abrirModalPerfil() {
   dom.inputAvatar.value = estado.perfil.avatar;
   actualizarPreviewAvatar(estado.perfil.avatar);
 
-  // Cargar email y pass del usuario registrado desde localStorage
-  const sesion = lsGet(LS_SESION);
-  const usuarios = lsGet('weatherapp_usuarios') || {};
-  if (sesion && sesion.email && usuarios[sesion.email]) {
-    dom.inputEmail.value = sesion.email;
-    dom.inputPass.value = usuarios[sesion.email].pass || '';
-  } else {
-    dom.inputEmail.value = '';
-    dom.inputPass.value = '';
-  }
+  dom.inputEmail.value = estado.perfil.email || '';
+  dom.inputPass.value = '';
 
   if (dom.archivoNombre) dom.archivoNombre.textContent = '';
   ocultar(dom.perfilFeedback);
@@ -417,49 +406,47 @@ function actualizarPreviewAvatar(url) {
   }
 }
 
-function guardarPerfil(e) {
+async function guardarPerfil(e) {
   e.preventDefault();
   const nombre = dom.inputNombre.value.trim();
   const avatar = dom.inputAvatar.value.trim();
   const emailNuevo = dom.inputEmail.value.trim();
   const passNuevo = dom.inputPass.value;
 
-  // Actualizar perfil (nombre + avatar)
-  estado.perfil = { nombre, avatar };
-  lsSet(LS_PERFIL, estado.perfil);
-  renderizarPerfil();
+  try {
+    const dataToSend = {
+        name: nombre,
+        avatar_url: avatar
+    };
+    
+    // Si se escribió un email o password nuevo, enviarlos
+    if (emailNuevo) dataToSend.email = emailNuevo;
+    if (passNuevo) dataToSend.password = passNuevo;
 
-  // Actualizar credenciales si se proporcionaron
-  const sesion = lsGet(LS_SESION);
-  const usuarios = lsGet('weatherapp_usuarios') || {};
+    const res = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dataToSend)
+    });
 
-  if (sesion && sesion.email) {
-    const emailViejo = sesion.email;
-
-    // Si cambió el email, mover usuario
-    if (emailNuevo && emailNuevo !== emailViejo) {
-      usuarios[emailNuevo] = { ...usuarios[emailViejo] };
-      delete usuarios[emailViejo];
-      sesion.email = emailNuevo;
-      lsSet(LS_SESION, sesion);
+    const data = await res.json();
+    
+    if (!res.ok) {
+        mostrarFeedbackModal(data.error || 'Error al actualizar perfil', 'error');
+        return;
     }
 
-    // Actualizar contraseña
-    const emailFinal = emailNuevo || emailViejo;
-    if (passNuevo && passNuevo.length >= 6 && usuarios[emailFinal]) {
-      usuarios[emailFinal].pass = passNuevo;
-    }
+    // Actualizar perfil local tras éxito
+    estado.perfil = { nombre, avatar };
+    renderizarPerfil();
 
-    // Guardar nombre en el registro del usuario
-    if (usuarios[emailFinal]) {
-      usuarios[emailFinal].nombre = nombre;
-    }
+    mostrarFeedbackModal(t('perfil_guardado'), 'exito');
+    setTimeout(cerrarModalPerfil, 1200);
 
-    lsSet('weatherapp_usuarios', usuarios);
+  } catch (err) {
+    console.error('Error actualizando perfil:', err);
+    mostrarFeedbackModal('Error de conexión', 'error');
   }
-
-  mostrarFeedbackModal(t('perfil_guardado'), 'exito');
-  setTimeout(cerrarModalPerfil, 1200);
 }
 
 function mostrarFeedbackModal(msg, tipo) {
@@ -1095,7 +1082,6 @@ async function guardarCiudad() {
 async function eliminarCiudad(nombre) {
   estado.ciudadesGuardadas = estado.ciudadesGuardadas.filter(c => c.ciudad !== nombre);
   renderizarLocalidades();
-  lsSet(LS_CIUDADES, estado.ciudadesGuardadas);
 
   try {
     await fetch(`/api/user/cities?name=${encodeURIComponent(nombre)}`, {
@@ -1136,7 +1122,6 @@ function cerrarSidebarMovil() {
 async function cerrarSesion() {
   try {
     await fetch('/api/auth/logout', { method: 'POST' });
-    lsSet(LS_SESION, null); // Compatibilidad
     window.location.replace('login.html');
   } catch (err) {
     window.location.replace('login.html');
@@ -1156,7 +1141,8 @@ async function verificarSesion() {
     // Sincronizar estado global
     estado.perfil = { 
         nombre: data.user.name, 
-        avatar: data.user.avatar_url 
+        avatar: data.user.avatar_url,
+        email: data.user.email
     };
     estado.tema = data.preferences.theme;
     estado.idioma = data.preferences.language;
