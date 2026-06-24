@@ -253,8 +253,10 @@ async function cambiarIdioma(nuevoIdioma) {
   
   // Re-renderizar con el nuevo idioma
   if (estado.ultimosHourly) {
-    renderizarHourly(estado.ultimosHourly);
+    renderizarClimaHoras(estado.ultimosHourly);
   }
+  
+  actualizarTextosClima();
 }
 
 function actualizarTextosClima() {
@@ -766,11 +768,11 @@ function gradosADireccion(deg) {
 
 /* Nivel UV */
 function nivelUV(uv) {
-  if (uv <= 0) return 'None';
-  if (uv <= 2) return `Low (${uv})`;
-  if (uv <= 5) return `Mod (${uv})`;
-  if (uv <= 7) return `High (${uv})`;
-  return `V.High (${uv})`;
+  if (uv <= 0) return '0';
+  if (uv <= 2) return `${t('uv_bajo')} (${uv})`;
+  if (uv <= 5) return `${t('uv_mod')} (${uv})`;
+  if (uv <= 7) return `${t('uv_alto')} (${uv})`;
+  return `${t('uv_muy_alto')} (${uv})`;
 }
 
 /* =====================================================
