@@ -248,11 +248,10 @@ async function manejarLogin(e) {
     spanIcono.classList.add('icono-cargando');
 
     try {
-        const usuarios = lsGet(LS_USUARIOS) || [];
-        const user = usuarios.find(u => u.email === email && u.password === password);
+        const data = await apiPost('/api/auth/login', { email, password });
         
-        if (!user) {
-            mostrarFeedback(dom.loginFeedback, t('err_pass_inc'), 'error');
+        if (data.error) {
+            mostrarFeedback(dom.loginFeedback, data.error, 'error');
             btnLogin.disabled = false;
             spanTexto.textContent = textoOriginal;
             spanIcono.textContent = iconoOriginal;
@@ -261,9 +260,9 @@ async function manejarLogin(e) {
         }
 
         /* Éxito */
-        lsSet(LS_SESION, { activa: true, email: user.email, token: 'dummy_token_ls' });
-        // Sincronizar perfil actual
-        lsSet(LS_PERFIL, { nombre: user.name, avatar: user.avatar_url, email: user.email });
+        lsSet(LS_SESION, { activa: true, email: data.user.email, token: 'jwt_managed_by_cookies' });
+        // Sincronizar perfil actual temporalmente para la UI
+        lsSet(LS_PERFIL, { nombre: data.user.name, avatar: data.user.avatar, email: data.user.email });
         
         mostrarFeedback(dom.loginFeedback, t('exito_bienvenido'), 'exito');
         setTimeout(() => window.location.replace('dashboard.html'), 1000);
@@ -340,26 +339,22 @@ async function manejarRegistro(e) {
     spanIcono.classList.add('icono-cargando');
 
     try {
-        const usuarios = lsGet(LS_USUARIOS) || [];
-        const userExists = usuarios.find(u => u.email === email);
+        const data = await apiPost('/api/auth/register', { 
+            name, 
+            email, 
+            password, 
+            avatar: avatarState.dataURL 
+        });
         
-        if (userExists) {
+        if (data.error) {
             btnRegistro.disabled = false;
             spanTexto.textContent = textoOriginal;
             spanIcono.textContent = iconoOriginal;
             spanIcono.classList.remove('icono-cargando');
-            setError(dom.regEmail, emailErr, 'El email ya está registrado');
-            mostrarModalRegistro(false, 'El email ya está registrado');
+            setError(dom.regEmail, emailErr, data.error);
+            mostrarModalRegistro(false, data.error);
             return;
         }
-        
-        usuarios.push({
-            name, 
-            email, 
-            password, 
-            avatar_url: avatarState.dataURL 
-        });
-        lsSet(LS_USUARIOS, usuarios);
 
         /* Éxito */
         btnRegistro.disabled = false;
@@ -373,7 +368,7 @@ async function manejarRegistro(e) {
         spanTexto.textContent = textoOriginal;
         spanIcono.textContent = iconoOriginal;
         spanIcono.classList.remove('icono-cargando');
-        mostrarModalRegistro(false, 'Error al guardar usuario localmente.');
+        mostrarModalRegistro(false, 'Error de conexión con el servidor.');
     }
 }
 
