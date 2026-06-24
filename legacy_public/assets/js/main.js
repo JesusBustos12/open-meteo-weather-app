@@ -404,9 +404,9 @@ async function guardarPerfil(e) {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
-        nombre, 
-        avatar, 
-        email: emailNuevo || undefined,
+        name: nombre, 
+        avatar_url: avatar, 
+        email: emailNuevo || estado.perfil.email,
         password: passNuevo || undefined 
       })
     });
@@ -1503,8 +1503,9 @@ function _dibujarCapaTermica() {
 
   _limpiarCapaTermica();
 
-  const { lat, lon } = mapaState.coordActual;
-  const temp = mapaState.tempActual ?? 20;
+  const lat = Number(mapaState.coordActual.lat) || 0;
+  const lon = Number(mapaState.coordActual.lon) || 0;
+  const temp = Number(mapaState.tempActual) ?? 20;
 
   // Crear anillos concéntricos de gradiente térmico
   const anillos = [
@@ -1549,21 +1550,21 @@ function _generarPuntosTermicos(lat, lon, tempBase) {
   const puntos = [];
   const offsets = [
     { dlat: 0.05, dlon: 0.08 }, { dlat: -0.06, dlon: 0.04 },
-    { dlat: 0.03, dlon: -0.07 }, { dlat: -0.04, dlon: -0.05 },
-    { dlat: 0.08, dlon: -0.02 }, { dlat: -0.02, dlon: 0.09 },
-    { dlat: 0.04, dlon: 0.05 }, { dlat: -0.07, dlon: -0.03 },
-    { dlat: 0.01, dlon: -0.09 }, { dlat: -0.09, dlon: 0.01 },
-    { dlat: 0.06, dlon: 0.06 }, { dlat: -0.05, dlon: -0.08 },
+    { dlat: 0.07, dlon: -0.05 }, { dlat: -0.03, dlon: -0.07 },
+    { dlat: 0.02, dlon: 0.1 }, { dlat: -0.08, dlon: -0.02 },
   ];
+  
+  const numLat = Number(lat);
+  const numLon = Number(lon);
 
-  offsets.forEach(({ dlat, dlon }) => {
-    const variacion = (Math.random() - 0.5) * 6; // ±3°C
+  offsets.forEach(({ dlat, dlon }, i) => {
+    const tempVar = (Math.random() - 0.5) * 6; // ±3°C
     puntos.push({
-      vlat: lat + dlat,
-      vlon: lon + dlon,
-      vtemp: tempBase + variacion,
-      vradio: 3000 + Math.random() * 5000,
-      vopacidad: 0.12 + Math.random() * 0.15,
+      vlat: numLat + dlat,
+      vlon: numLon + dlon,
+      vtemp: Number(tempBase) + tempVar,
+      vradio: 8000 + Math.random() * 6000,
+      vopacidad: 0.25 - Math.random() * 0.1,
     });
   });
 
