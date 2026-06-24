@@ -16,15 +16,22 @@ function aplicarTema() {
     document.documentElement.dataset.theme = 'dark';
 }
 
+const LS_USUARIOS = 'wa_usuarios';
+const LS_SESION = 'wa_sesion';
+
+function lsGet(clave) {
+    try { return JSON.parse(localStorage.getItem(clave)); } catch { return null; }
+}
+
+function lsSet(clave, valor) {
+    try { localStorage.setItem(clave, JSON.stringify(valor)); } catch {}
+}
+
 /* ===== GUARDIA DE SESIÓN ===== */
-async function verificarSesion() {
-    try {
-        const res = await fetch('/api/user/sync');
-        if (res.ok) {
-            window.location.replace('dashboard.html');
-        }
-    } catch (err) {
-        // Ignorar error de red
+function verificarSesion() {
+    const sesion = lsGet(LS_SESION);
+    if (sesion && sesion.activa) {
+        window.location.replace('dashboard.html');
     }
 }
 
@@ -238,10 +245,12 @@ async function manejarLogin(e) {
     spanIcono.classList.add('icono-cargando');
 
     try {
-        const data = await apiPost('/api/auth/login', { email, password });
+        const usuarios = lsGet(LS_USUARIOS) || [];
+        const user = usuarios.find(u => u.email === email && u.password === password);
         
-        if (data.error) {
-            mostrarFeedback(dom.loginFeedback, data.error, 'error');
+        if (!user) {
+            const errorMsg = usuarios.find(u => u.email === email) ? 'Credenciales inválidas' : 'No se encontró la cuenta';
+            mostrarFeedback(dom.loginFeedback, errorMsg, 'error');
             btnLogin.disabled = false;
             spanTexto.textContent = textoOriginal;
             spanIcono.textContent = iconoOriginal;
@@ -249,8 +258,9 @@ async function manejarLogin(e) {
             return;
         }
 
+        lsSet(LS_SESION, { activa: true, email: user.email });
         /* Éxito */
-        mostrarFeedback(dom.loginFeedback, t('exito_bienvenido'), 'exito');
+        mostrarFeedback(dom.loginFeedback, t('exito_bienvenido') || '¡Bienvenido!', 'exito');
         setTimeout(() => window.location.replace('dashboard.html'), 1000);
     } catch (err) {
         mostrarFeedback(dom.loginFeedback, 'Error de conexión', 'error');
@@ -325,22 +335,22 @@ async function manejarRegistro(e) {
     spanIcono.classList.add('icono-cargando');
 
     try {
-        const data = await apiPost('/api/auth/register', { 
-            name, 
-            email, 
-            password, 
-            avatar: avatarState.dataURL 
-        });
-        
-        if (data.error) {
+        const usuarios = lsGet(LS_USUARIOS) || [];
+        if (usuarios.find(u => u.email === email)) {
             btnRegistro.disabled = false;
             spanTexto.textContent = textoOriginal;
             spanIcono.textContent = iconoOriginal;
             spanIcono.classList.remove('icono-cargando');
-            setError(dom.regEmail, emailErr, data.error);
-            mostrarModalRegistro(false, data.error);
+            setError(dom.regEmail, emailErr, 'El email ya está registrado');
+            mostrarModalRegistro(false, 'El email ya está registrado');
             return;
         }
+
+        const newUser = { name, email, password, avatar: avatarState.dataURL };
+        usuarios.push(newUser);
+        lsSet(LS_USUARIOS, usuarios);
+        // Automatically login the user after registration if desired, or let them login
+        // Let's not login automatically since it says "Ahora puedes iniciar sesión."
 
         /* Éxito */
         btnRegistro.disabled = false;
@@ -354,7 +364,7 @@ async function manejarRegistro(e) {
         spanTexto.textContent = textoOriginal;
         spanIcono.textContent = iconoOriginal;
         spanIcono.classList.remove('icono-cargando');
-        mostrarModalRegistro(false, 'Error de conexión con el servidor.');
+        mostrarModalRegistro(false, 'Error local al guardar.');
     }
 }
 

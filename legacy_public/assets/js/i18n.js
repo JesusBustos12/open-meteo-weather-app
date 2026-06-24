@@ -265,12 +265,8 @@ function cambiarIdiomaGlobal(nuevoIdioma) {
     currentIdioma = nuevoIdioma;
     aplicarTraducciones();
     
-    // Sincronizar en la nube sin bloquear
-    fetch('/api/user/config', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ language: nuevoIdioma })
-    }).catch(() => {});
+    // Guardar en localStorage
+    localStorage.setItem('wa_idioma', nuevoIdioma);
 }
 
 /** Inyecta el idioma desde la base de datos (llamado desde main.js) */
