@@ -255,16 +255,6 @@ async function cambiarIdioma(nuevoIdioma) {
   if (estado.ultimosHourly) {
     renderizarHourly(estado.ultimosHourly);
   }
-  
-  try {
-    await fetch('/api/user/config', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ language: nuevoIdioma })
-    });
-  } catch (err) {
-    console.error('Error al guardar idioma en DB:', err);
-  }
 }
 
 function actualizarTextosClima() {
@@ -291,17 +281,8 @@ function aplicarTema() {
 
 async function cambiarTema(esDark) {
   estado.tema = esDark ? 'dark' : 'light';
+  lsSet('wa_tema', estado.tema);
   aplicarTema();
-  
-  try {
-    await fetch('/api/user/config', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ theme: estado.tema })
-    });
-  } catch (err) {
-    console.error('Error al guardar tema en DB:', err);
-  }
 }
 
 /* =====================================================
@@ -414,30 +395,9 @@ async function guardarPerfil(e) {
   const passNuevo = dom.inputPass.value;
 
   try {
-    const dataToSend = {
-        name: nombre,
-        avatar_url: avatar
-    };
-    
-    // Si se escribió un email o password nuevo, enviarlos
-    if (emailNuevo) dataToSend.email = emailNuevo;
-    if (passNuevo) dataToSend.password = passNuevo;
-
-    const res = await fetch('/api/user/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dataToSend)
-    });
-
-    const data = await res.json();
-    
-    if (!res.ok) {
-        mostrarFeedbackModal(data.error || 'Error al actualizar perfil', 'error');
-        return;
-    }
-
-    // Actualizar perfil local tras éxito
-    estado.perfil = { nombre, avatar };
+    // Actualizar perfil local
+    estado.perfil = { nombre, avatar, email: emailNuevo || estado.perfil.email };
+    lsSet(LS_PERFIL, estado.perfil);
     renderizarPerfil();
 
     mostrarFeedbackModal(t('perfil_guardado'), 'exito');
@@ -445,7 +405,7 @@ async function guardarPerfil(e) {
 
   } catch (err) {
     console.error('Error actualizando perfil:', err);
-    mostrarFeedbackModal('Error de conexión', 'error');
+    mostrarFeedbackModal('Error local al guardar', 'error');
   }
 }
 
@@ -1060,36 +1020,16 @@ async function guardarCiudad() {
   if (existe) return;
 
   estado.ciudadesGuardadas.push({ ciudad, region, lat, lon });
+  lsSet('wa_ciudades', estado.ciudadesGuardadas);
   renderizarLocalidades();
   mostrarFeedbackCiudad(t('ciudad_guardada'), 'exito');
-
-  try {
-    await fetch('/api/user/cities', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-            name: ciudad, 
-            latitude: lat, 
-            longitude: lon 
-        })
-    });
-  } catch (err) {
-    console.error('Error al guardar ciudad en DB:', err);
-  }
 }
 
 /** Elimina una ciudad de favoritos */
 async function eliminarCiudad(nombre) {
   estado.ciudadesGuardadas = estado.ciudadesGuardadas.filter(c => c.ciudad !== nombre);
+  lsSet('wa_ciudades', estado.ciudadesGuardadas);
   renderizarLocalidades();
-
-  try {
-    await fetch(`/api/user/cities?name=${encodeURIComponent(nombre)}`, {
-        method: 'DELETE'
-    });
-  } catch (err) {
-    console.error('Error al eliminar ciudad de DB:', err);
-  }
 }
 
 function mostrarFeedbackCiudad(msg, tipo) {
@@ -1120,50 +1060,33 @@ function cerrarSidebarMovil() {
 
 /** Cierra la sesión de usuario y limpia el servidor */
 async function cerrarSesion() {
-  try {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    window.location.replace('login.html');
-  } catch (err) {
-    window.location.replace('login.html');
-  }
+  lsSet('wa_sesion', null);
+  window.location.replace('login.html');
 }
 
 /** Verifica si hay sesión activa y sincroniza estado global con DB */
 async function verificarSesion() {
-  try {
-    const res = await fetch('/api/user/sync');
-    if (!res.ok) {
-        window.location.replace('login.html');
-        return;
-    }
-    const data = await res.json();
-    
-    // Sincronizar estado global
-    estado.perfil = { 
-        nombre: data.user.name, 
-        avatar: data.user.avatar_url,
-        email: data.user.email
-    };
-    estado.tema = data.preferences.theme;
-    estado.idioma = data.preferences.language;
-    
-    // Mapear ciudades de la DB al formato de la App
-    estado.ciudadesGuardadas = data.cities.map(c => ({
-        ciudad: c.name,
-        lat: parseFloat(c.latitude),
-        lon: parseFloat(c.longitude)
-    }));
-
-    // Aplicar a UI inmediatamente
-    aplicarTema();
-    aplicarIdioma();
-    cargarPerfil();
-    renderizarLocalidades();
-    
-  } catch (err) {
-    console.error('Error de sincronización:', err);
-    window.location.replace('login.html');
+  const sesion = lsGet('wa_sesion');
+  if (!sesion || !sesion.activa) {
+      window.location.replace('login.html');
+      return;
   }
+  
+  // Sincronizar estado global desde localStorage
+  const perfil = lsGet('wa_perfil') || {};
+  estado.perfil = { 
+      nombre: perfil.nombre || sesion.email, 
+      avatar: perfil.avatar || '',
+      email: perfil.email || sesion.email
+  };
+  estado.tema = lsGet('wa_tema') || 'dark';
+  estado.ciudadesGuardadas = lsGet('wa_ciudades') || [];
+
+  // Aplicar a UI inmediatamente
+  aplicarTema();
+  aplicarIdioma();
+  cargarPerfil();
+  renderizarLocalidades();
 }
 
 /* =====================================================

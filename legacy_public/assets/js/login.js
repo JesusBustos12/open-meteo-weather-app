@@ -32,13 +32,9 @@ function aplicarTema() {
 
 /* ===== GUARDIA DE SESIÓN ===== */
 async function verificarSesion() {
-    try {
-        const res = await fetch('/api/user/sync');
-        if (res.ok) {
-            window.location.replace('dashboard.html');
-        }
-    } catch (err) {
-        // Sin sesión, quedarse en login
+    const sesion = lsGet(LS_SESION);
+    if (sesion && sesion.activa) {
+        window.location.replace('dashboard.html');
     }
 }
 
@@ -252,10 +248,11 @@ async function manejarLogin(e) {
     spanIcono.classList.add('icono-cargando');
 
     try {
-        const data = await apiPost('/api/auth/login', { email, password });
+        const usuarios = lsGet(LS_USUARIOS) || [];
+        const user = usuarios.find(u => u.email === email && u.password === password);
         
-        if (data.error) {
-            mostrarFeedback(dom.loginFeedback, t(data.error === 'Credenciales inválidas' ? 'err_pass_inc' : 'err_no_cuenta'), 'error');
+        if (!user) {
+            mostrarFeedback(dom.loginFeedback, t('err_pass_inc'), 'error');
             btnLogin.disabled = false;
             spanTexto.textContent = textoOriginal;
             spanIcono.textContent = iconoOriginal;
@@ -264,10 +261,14 @@ async function manejarLogin(e) {
         }
 
         /* Éxito */
+        lsSet(LS_SESION, { activa: true, email: user.email, token: 'dummy_token_ls' });
+        // Sincronizar perfil actual
+        lsSet(LS_PERFIL, { nombre: user.name, avatar: user.avatar_url, email: user.email });
+        
         mostrarFeedback(dom.loginFeedback, t('exito_bienvenido'), 'exito');
         setTimeout(() => window.location.replace('dashboard.html'), 1000);
     } catch (err) {
-        mostrarFeedback(dom.loginFeedback, 'Error de conexión con el servidor', 'error');
+        mostrarFeedback(dom.loginFeedback, 'Error de conexión', 'error');
         btnLogin.disabled = false;
         spanTexto.textContent = textoOriginal;
         spanIcono.textContent = iconoOriginal;
@@ -339,22 +340,26 @@ async function manejarRegistro(e) {
     spanIcono.classList.add('icono-cargando');
 
     try {
-        const data = await apiPost('/api/auth/register', { 
-            name, 
-            email, 
-            password, 
-            avatar: avatarState.dataURL 
-        });
-
-        if (data.error) {
+        const usuarios = lsGet(LS_USUARIOS) || [];
+        const userExists = usuarios.find(u => u.email === email);
+        
+        if (userExists) {
             btnRegistro.disabled = false;
             spanTexto.textContent = textoOriginal;
             spanIcono.textContent = iconoOriginal;
             spanIcono.classList.remove('icono-cargando');
-            if (data.error.includes('email')) setError(dom.regEmail, emailErr, data.error);
-            mostrarModalRegistro(false, data.error);
+            setError(dom.regEmail, emailErr, 'El email ya está registrado');
+            mostrarModalRegistro(false, 'El email ya está registrado');
             return;
         }
+        
+        usuarios.push({
+            name, 
+            email, 
+            password, 
+            avatar_url: avatarState.dataURL 
+        });
+        lsSet(LS_USUARIOS, usuarios);
 
         /* Éxito */
         btnRegistro.disabled = false;
@@ -368,7 +373,7 @@ async function manejarRegistro(e) {
         spanTexto.textContent = textoOriginal;
         spanIcono.textContent = iconoOriginal;
         spanIcono.classList.remove('icono-cargando');
-        mostrarModalRegistro(false, 'Error al conectar con el servidor. Por favor, verifica tu conexión.');
+        mostrarModalRegistro(false, 'Error al guardar usuario localmente.');
     }
 }
 

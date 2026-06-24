@@ -1,4 +1,4 @@
-const CACHE_NAME = 'weather-app-v7';
+const CACHE_NAME = 'weather-app-v8';
 const STATIC_ASSETS = [
     './',
     './dashboard.html',
@@ -21,7 +21,7 @@ const EXTERNAL_ASSETS = [
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            console.log('[SW] Pre-caching static assets v7');
+            console.log('[SW] Pre-caching static assets v8');
             return cache.addAll([...STATIC_ASSETS, ...EXTERNAL_ASSETS]);
         })
     );
