@@ -1062,11 +1062,12 @@ async function eliminarCiudad(nombre) {
   estado.ciudadesGuardadas = estado.ciudadesGuardadas.filter(c => c.ciudad !== nombre);
   renderizarLocalidades();
 
-  try {
-      await fetch(`/api/user/cities/${encodeURIComponent(nombre)}`, {
+    try {
+      const res = await fetch(`/api/user/cities?name=${encodeURIComponent(nombre)}`, {
           method: 'DELETE'
       });
-  } catch (e) {}
+      if (res.ok) {}
+    } catch (e) {}
 }
 
 function mostrarFeedbackCiudad(msg, tipo) {
