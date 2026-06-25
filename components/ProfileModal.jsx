@@ -198,7 +198,10 @@ export default function ProfileModal({ isOpen, onClose }) {
               <span>{t('cancelar')}</span>
             </button>
             <button type="submit" className="btn-primario" disabled={isSaving}>
-              <span className="material-symbols-outlined" aria-hidden="true">
+              <span 
+                className={`material-symbols-outlined ${isSaving ? 'icono-cargando' : ''}`} 
+                aria-hidden="true"
+              >
                 {isSaving ? 'sync' : 'save'}
               </span>
               <span>{isSaving ? t('guardando') : t('guardar')}</span>

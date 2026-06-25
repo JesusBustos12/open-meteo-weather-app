@@ -62,7 +62,6 @@ export default function Dashboard() {
                   <span className="material-symbols-outlined sidebar__logo-icon" aria-hidden="true">monitoring</span>
                   <h1 className="sidebar__title">WeatherApp</h1>
               </div>
-              <p className="sidebar__version">{t('version')}</p>
           </div>
 
           <nav className="sidebar__nav" aria-label="Navegación principal">

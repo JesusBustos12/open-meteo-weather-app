@@ -1199,6 +1199,10 @@ ul {
   animation: girar 0.8s linear infinite;
 }
 
+.icono-cargando {
+  animation: girar 1s linear infinite;
+}
+
 @keyframes girar {
   to {
     transform: rotate(360deg);
