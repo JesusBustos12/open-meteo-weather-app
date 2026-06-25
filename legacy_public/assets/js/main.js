@@ -403,7 +403,7 @@ async function guardarPerfil(e) {
     const res = await fetch('/api/user/profile', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: nombre, email: emailNuevo, password: passNuevo, avatar })
+      body: JSON.stringify({ name: nombre, email: emailNuevo, password: passNuevo, avatar_url: avatar })
     });
     
     if (!res.ok) {
