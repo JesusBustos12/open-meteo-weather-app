@@ -264,9 +264,6 @@ function aplicarTraducciones() {
 function cambiarIdiomaGlobal(nuevoIdioma) {
     currentIdioma = nuevoIdioma;
     aplicarTraducciones();
-    
-    // Guardar en localStorage
-    localStorage.setItem('wa_idioma', nuevoIdioma);
 }
 
 /** Inyecta el idioma desde la base de datos (llamado desde main.js) */

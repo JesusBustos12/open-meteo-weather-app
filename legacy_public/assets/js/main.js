@@ -269,8 +269,13 @@ async function cambiarTema(esDark) {
   estado.tema = esDark ? 'dark' : 'light';
   aplicarTema();
 
-  // Sincronizar con localStorage
-  localStorage.setItem('wa_tema', estado.tema);
+  try {
+      await fetch('/api/user/config', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ theme: estado.tema, language: estado.idioma })
+      });
+  } catch (e) {}
 }
 
 /* =====================================================
@@ -395,23 +400,15 @@ async function guardarPerfil(e) {
   spanIcono.classList.add('icono-cargando');
 
   try {
-    const usuarios = JSON.parse(localStorage.getItem('wa_usuarios')) || [];
-    const sesion = JSON.parse(localStorage.getItem('wa_sesion'));
+    const res = await fetch('/api/user/profile', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: nombre, email: emailNuevo, password: passNuevo, avatar })
+    });
     
-    if (sesion && sesion.activa) {
-        const userIndex = usuarios.findIndex(u => u.email === sesion.email);
-        if (userIndex !== -1) {
-            usuarios[userIndex].name = nombre;
-            usuarios[userIndex].avatar = avatar;
-            if (emailNuevo) usuarios[userIndex].email = emailNuevo;
-            if (passNuevo) usuarios[userIndex].password = passNuevo;
-            
-            localStorage.setItem('wa_usuarios', JSON.stringify(usuarios));
-            if (emailNuevo) {
-                sesion.email = emailNuevo;
-                localStorage.setItem('wa_sesion', JSON.stringify(sesion));
-            }
-        }
+    if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Error en servidor');
     }
 
     // Actualizar perfil local en memoria
@@ -1051,8 +1048,13 @@ async function guardarCiudad() {
   renderizarLocalidades();
   mostrarFeedbackCiudad(t('ciudad_guardada') || 'Ciudad guardada', 'exito');
 
-  // Guardar en localStorage
-  localStorage.setItem('wa_ciudades', JSON.stringify(estado.ciudadesGuardadas));
+  try {
+      await fetch('/api/user/cities', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: ciudad, latitude: lat, longitude: lon })
+      });
+  } catch (e) {}
 }
 
 /** Elimina una ciudad de favoritos */
@@ -1060,8 +1062,11 @@ async function eliminarCiudad(nombre) {
   estado.ciudadesGuardadas = estado.ciudadesGuardadas.filter(c => c.ciudad !== nombre);
   renderizarLocalidades();
 
-  // Eliminar en localStorage
-  localStorage.setItem('wa_ciudades', JSON.stringify(estado.ciudadesGuardadas));
+  try {
+      await fetch(`/api/user/cities/${encodeURIComponent(nombre)}`, {
+          method: 'DELETE'
+      });
+  } catch (e) {}
 }
 
 function mostrarFeedbackCiudad(msg, tipo) {
@@ -1093,11 +1098,7 @@ function cerrarSidebarMovil() {
 /** Cierra la sesión de usuario y limpia el servidor */
 async function cerrarSesion() {
   try {
-      const sesion = JSON.parse(localStorage.getItem('wa_sesion'));
-      if (sesion) {
-          sesion.activa = false;
-          localStorage.setItem('wa_sesion', JSON.stringify(sesion));
-      }
+      await fetch('/api/auth/logout', { method: 'POST' });
   } catch(e) {}
   window.location.replace('login.html');
 }
@@ -1105,34 +1106,42 @@ async function cerrarSesion() {
 /** Verifica si hay sesión activa y sincroniza estado global con DB */
 async function verificarSesion() {
   try {
-      const sesion = JSON.parse(localStorage.getItem('wa_sesion'));
-      if (!sesion || !sesion.activa) throw new Error('No autorizado');
+      const res = await fetch('/api/user/sync');
+      if (!res.ok) throw new Error('No autorizado');
       
-      const usuarios = JSON.parse(localStorage.getItem('wa_usuarios')) || [];
-      const user = usuarios.find(u => u.email === sesion.email);
+      const data = await res.json();
       
-      if (user) {
+      if (data.user) {
           estado.perfil = { 
-              nombre: user.name || user.email || 'Usuario', 
-              avatar: user.avatar || '',
-              email: user.email || ''
+              nombre: data.user.name || data.user.email || 'Usuario', 
+              avatar: data.user.avatar_url || data.user.avatar || '',
+              email: data.user.email || ''
           };
       } else {
-          estado.perfil = { nombre: 'Usuario', avatar: '', email: sesion.email };
+          throw new Error('No autorizado');
       }
       
-      const tema = localStorage.getItem('wa_tema');
+      const tema = data.preferences?.theme;
       if (tema) {
           estado.tema = tema;
       }
       
-      const idioma = localStorage.getItem('wa_idioma');
+      const idioma = data.preferences?.language;
       if (idioma) {
           setIdiomaDesdeBackend(idioma);
           estado.idioma = idioma;
       }
 
-      estado.ciudadesGuardadas = JSON.parse(localStorage.getItem('wa_ciudades')) || [];
+      if (data.cities) {
+          estado.ciudadesGuardadas = data.cities.map(c => ({
+              ciudad: c.name,
+              lat: c.latitude,
+              lon: c.longitude,
+              region: ''
+          }));
+      } else {
+          estado.ciudadesGuardadas = [];
+      }
 
       // Aplicar a UI inmediatamente
       aplicarTema();

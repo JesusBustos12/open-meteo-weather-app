@@ -30,10 +30,6 @@ export default function Dashboard() {
 
   useEffect(() => {
     const initApp = async () => {
-      if (typeof window !== 'undefined' && !localStorage.getItem('auth_hint')) {
-        setLoading(false);
-        return;
-      }
       await syncFromBackend();
       setLoading(false);
     };
@@ -139,7 +135,6 @@ export default function Dashboard() {
 
           <div className="sidebar__footer">
               <button className="btn-cerrar-sesion" aria-label="Cerrar sesión" onClick={() => {
-                localStorage.removeItem('auth_hint');
                 fetch('/api/auth/logout', { method: 'POST' }).then(() => router.push('/login'));
               }}>
                   <span className="material-symbols-outlined" aria-hidden="true">logout</span>
@@ -222,7 +217,6 @@ export default function Dashboard() {
                     className="header__logout-btn" 
                     aria-label="Cerrar sesión" 
                     onClick={() => {
-                      localStorage.removeItem('auth_hint');
                       fetch('/api/auth/logout', { method: 'POST' }).then(() => router.push('/login'));
                     }}
                     title={t('cerrar_sesion')}

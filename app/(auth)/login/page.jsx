@@ -68,7 +68,6 @@ export default function LoginPage() {
         if (!res.ok) {
             setFeedback({ msg: data.error || 'Credenciales inválidas', type: 'error', visible: true });
         } else {
-            localStorage.setItem('auth_hint', 'true');
             setFeedback({ msg: '¡Bienvenido de nuevo! Redirigiendo...', type: 'exito', visible: true });
             setTimeout(() => router.push('/'), 1000);
         }
@@ -104,7 +103,6 @@ export default function LoginPage() {
         if (!res.ok) {
             setFeedback({ msg: data.error || 'Error al registrar', type: 'error', visible: true });
         } else {
-            localStorage.setItem('auth_hint', 'true');
             setFeedback({ msg: '¡Cuenta creada! Redirigiendo...', type: 'exito', visible: true });
             setTimeout(() => router.push('/'), 1000);
         }
@@ -117,14 +115,12 @@ export default function LoginPage() {
 
   const changeLanguage = (lang) => {
     setLanguage(lang);
-    // Solo intentar guardar en BD si hay una pista de que estamos logueados
-    if (typeof window !== 'undefined' && localStorage.getItem('auth_hint')) {
-      fetch('/api/user/config', { 
-        method: 'PUT', 
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ language: lang }) 
-      }).catch(() => {}); // Ignorar si falla
-    }
+    // Intentar guardar en BD de forma optimista
+    fetch('/api/user/config', { 
+      method: 'PUT', 
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ language: lang }) 
+    }).catch(() => {}); // Ignorar si falla
   };
 
   return (
