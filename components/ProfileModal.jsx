@@ -46,6 +46,11 @@ export default function ProfileModal({ isOpen, onClose }) {
     const file = e.target.files[0];
     if (!file) return;
 
+    if (file.size > 2 * 1024 * 1024) {
+      alert(t('err_solo_img') || "El archivo es demasiado grande. Máximo 2MB.");
+      return;
+    }
+
     setFileName(file.name);
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -57,10 +62,15 @@ export default function ProfileModal({ isOpen, onClose }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSaving(true);
-    const success = await updateProfile(formData);
-    setIsSaving(false);
-    if (success) {
-      onClose();
+    try {
+      const success = await updateProfile(formData);
+      if (success) {
+        onClose();
+      }
+    } catch (err) {
+      console.error("Error en handleSubmit:", err);
+    } finally {
+      setIsSaving(false);
     }
   };
 

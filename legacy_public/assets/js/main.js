@@ -361,9 +361,8 @@ function abrirModalPerfil() {
   setTimeout(() => dom.inputNombre.focus(), 50);
 }
 
-function cerrarModalPerfil() { 
-  ocultar(dom.modalPerfil); 
-  // Devolver foco al botón original
+function cerrarModalPerfil() {
+  ocultar(dom.modalPerfil);
   if (estado.elementoPrevioFoco) {
     estado.elementoPrevioFoco.focus();
   }
