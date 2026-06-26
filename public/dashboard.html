@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#020617" />
+    
+    <!-- SEO Primario para el Público Latino -->
+    <title>WeatherApp Pro — Pronóstico del Tiempo y Estación Meteorológica Local</title>
+    <meta name="description"
+        content="Consulta el pronóstico del tiempo exacto, alertas climáticas, sensación térmica y mapa interactivo. La mejor estación meteorológica profesional en tiempo real para Latinoamérica." />
+    <meta name="keywords" content="clima, pronóstico del tiempo, estación meteorológica, clima hoy, mapa del tiempo, sensación térmica, humedad, viento, alertas climáticas, tiempo real" />
+    <meta name="author" content="Digital Auteur — Jesús Bustos Arizmendi" />
+    
+    <!-- Open Graph / LinkedIn / WhatsApp / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="./" />
+    <meta property="og:title" content="WeatherApp Pro — Tu Estación Meteorológica Profesional" />
+    <meta property="og:description" content="Pronóstico exacto, mapas interactivos y datos meteorológicos en tiempo real para todo el público latino." />
+    <meta property="og:image" content="assets/Img/og-image.png" />
+
+    <!-- Twitter / X -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:title" content="WeatherApp Pro — Clima y Pronóstico en Vivo" />
+    <meta property="twitter:description" content="Nivel empresarial en tu bolsillo. Datos meteorológicos críticos y mapas dinámicos." />
+    <meta property="twitter:image" content="assets/Img/og-image.png" />
+
+    <!-- PWA & Mobile -->
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="assets/Img/clima.png" />
+    <link rel="icon" type="image/png" href="assets/Img/clima.png" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+        rel="stylesheet" />
+    <!-- Leaflet.js — mapa interactivo real (OpenStreetMap, sin API key) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+
+<body>
+
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="sidebar" id="sidebar" aria-label="Panel lateral">
+
+        <!-- Logo + versión -->
+        <div class="sidebar__logo">
+            <div class="sidebar__logo-fila">
+                <img src="assets/Img/clima.png" class="sidebar__logo-icon" alt="Logo clima" aria-hidden="true" />
+                <h1 class="sidebar__title">WeatherApp</h1>
+            </div>
+        </div>
+
+        <!-- Navegación principal -->
+        <nav class="sidebar__nav" aria-label="Navegación principal">
+            <a href="#" class="sidebar__nav-item sidebar__nav-item--activo" id="nav-dashboard" aria-current="page">
+                <span class="material-symbols-outlined" aria-hidden="true">analytics</span>
+                <span data-i18n="nav_dashboard">Dashboard</span>
+            </a>
+            <a href="#" class="sidebar__nav-item" id="nav-map">
+                <span class="material-symbols-outlined" aria-hidden="true">explore</span>
+                <span data-i18n="nav_mapa">Map</span>
+            </a>
+            <a href="#" class="sidebar__nav-item" id="nav-profile">
+                <span class="material-symbols-outlined" aria-hidden="true">account_circle</span>
+                <span data-i18n="nav_perfil">Profile</span>
+            </a>
+        </nav>
+
+        <!-- Localidades guardadas -->
+        <section class="sidebar__localidades" aria-label="Localidades guardadas">
+            <h2 class="sidebar__seccion-titulo">
+                <span class="material-symbols-outlined" aria-hidden="true">bookmark</span>
+                <span data-i18n="localidades_titulo">Saved Locations</span>
+            </h2>
+            <ul class="localidades-lista" id="localidades-lista" aria-live="polite">
+                <li class="localidades-lista__vacio" id="localidades-vacio" data-i18n="localidades_vacias">Sin
+                    localidades guardadas</li>
+            </ul>
+        </section>
+
+        <!-- Pie del sidebar -->
+        <div class="sidebar__footer">
+            <button class="btn-cerrar-sesion" id="btn-cerrar-sesion" aria-label="Cerrar sesión">
+                <span class="material-symbols-outlined" aria-hidden="true">logout</span>
+                <span data-i18n="cerrar_sesion">Log Out</span>
+            </button>
+        </div>
+
+    </aside>
+
+    <!-- ===== CONTENIDO PRINCIPAL ===== -->
+    <div class="layout">
+
+        <!-- HEADER -->
+        <header class="header" role="banner">
+
+            <!-- Botón menú móvil -->
+            <button class="header__menu-btn" id="btn-menu-movil" aria-label="Abrir menú" aria-expanded="false"
+                aria-controls="sidebar">
+                <span class="material-symbols-outlined" aria-hidden="true">menu</span>
+            </button>
+
+            <!-- Buscador -->
+            <form class="buscador" id="form-buscador" role="search" novalidate autocomplete="off">
+                <label for="buscador-input" class="sr-only" data-i18n="buscar_placeholder">Buscar ciudad</label>
+                <span class="material-symbols-outlined buscador__icono" aria-hidden="true">search</span>
+                <div class="buscador__input-wrapper">
+                    <!-- Texto de sugerencia (Ghost Text) -->
+                    <input type="text" id="buscador-hint" class="buscador__input buscador__input--hint" readonly
+                        tabindex="-1" aria-hidden="true" />
+                    <input type="search" id="buscador-input" class="buscador__input" placeholder="Search for a city..."
+                        data-i18n-placeholder="buscar_placeholder" autocomplete="off" aria-autocomplete="list"
+                        aria-controls="sugerencias-lista" aria-haspopup="listbox" aria-expanded="false"
+                        aria-describedby="buscador-instrucciones" />
+                </div>
+                <button class="buscador__btn" id="btn-buscar" type="submit" aria-label="Buscar ciudad seleccionada">
+                    <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+                </button>
+                <span id="buscador-instrucciones" class="sr-only" data-i18n="buscador_instrucciones">Escribe para buscar ciudades, usa las flechas para navegar por los resultados.</span>
+                <!-- Sugerencias -->
+                <ul class="sugerencias" id="sugerencias-lista" role="listbox" aria-label="Sugerencias de ciudades"
+                    hidden>
+                </ul>
+                <!-- Error búsqueda -->
+                <div class="buscador__error" id="buscador-error" role="alert" aria-live="assertive" hidden>
+                    <span class="material-symbols-outlined" aria-hidden="true">error</span>
+                    <span id="buscador-error-msg" data-i18n="ciudad_no_encontrada">Ciudad no encontrada</span>
+                </div>
+            </form>
+
+            <!-- Controles del header -->
+            <div class="header__controles">
+
+                <!-- Toggle Tema -->
+                <div class="toggle-wrap" title="Cambiar tema">
+                    <span class="material-symbols-outlined toggle-wrap__icono" aria-hidden="true">light_mode</span>
+                    <label class="toggle" for="toggle-tema" aria-label="Cambiar tema claro/oscuro">
+                        <input type="checkbox" id="toggle-tema" class="toggle__input" role="switch"
+                            aria-checked="true" />
+                        <span class="toggle__slider" aria-hidden="true"></span>
+                    </label>
+                    <span class="material-symbols-outlined toggle-wrap__icono" aria-hidden="true">dark_mode</span>
+                </div>
+
+                <!-- Toggle Idioma -->
+                <div class="toggle-wrap toggle-wrap--idioma" title="Cambiar idioma">
+                    <button class="toggle-idioma-btn" id="btn-idioma-es" aria-pressed="true">ES</button>
+                    <button class="toggle-idioma-btn" id="btn-idioma-en" aria-pressed="false">EN</button>
+                </div>
+
+                <!-- Perfil en header (nombre + avatar initials) -->
+                <div class="header__perfil" id="header-perfil">
+                    <div class="header__perfil-info">
+                        <p class="header__perfil-nombre" id="header-perfil-nombre">Usuario</p>
+                        <p class="header__perfil-rol" data-i18n="perfil_rol">Clima en tiempo real</p>
+                    </div>
+                    <div class="header__perfil-avatar" id="header-perfil-avatar" aria-label="Avatar">
+                        <span id="header-perfil-iniciales">U</span>
+                    </div>
+                </div>
+
+            </div>
+
+        </header>
+
+        <!-- WORKSPACE (grid de 3 zonas) -->
+        <main class="segmented-workspace" id="segmented-workspace">
+
+            <!-- ===== ZONA 1 — Clima Actual ===== -->
+            <section class="zona-1" id="zona-clima-actual" aria-label="Clima actual">
+
+                <!-- Cabecera ciudad -->
+                <div class="zona-1__cabecera" id="zona-cabecera">
+                    <div>
+                        <h2 class="clima-ciudad" id="ciudad-nombre">—</h2>
+                        <p class="clima-region" id="ciudad-region">—</p>
+                    </div>
+                    <button class="btn-guardar-ciudad" id="btn-guardar-ciudad" aria-label="Guardar ciudad">
+                        <span class="material-symbols-outlined" aria-hidden="true">bookmark_add</span>
+                        <span data-i18n="guardar_ciudad">Guardar</span>
+                    </button>
+                </div>
+
+                <!-- Badge real-time station -->
+                <div class="badge-estacion" id="badge-estacion" hidden>
+                    <span class="material-symbols-outlined" aria-hidden="true">sensors</span>
+                    <span data-i18n="estacion_tiempo_real">Real-time Station</span>
+                </div>
+
+                <!-- Estado inicial / vacío -->
+                <section class="estado-inicial" id="estado-inicial" aria-label="Estado inicial">
+                    <span class="material-symbols-outlined estado-inicial__icono"
+                        aria-hidden="true">partly_cloudy_day</span>
+                    <h2 class="estado-inicial__titulo" data-i18n="inicio_titulo">Busca una ciudad</h2>
+                    <p class="estado-inicial__desc" data-i18n="inicio_desc">Escribe el nombre de una ciudad para ver el
+                        pronóstico del tiempo.</p>
+                </section>
+
+                <!-- Loader -->
+                <div class="loader" id="loader" aria-live="polite" aria-label="Cargando" hidden>
+                    <div class="loader__spinner" aria-hidden="true"></div>
+                    <p data-i18n="cargando">Cargando datos...</p>
+                </div>
+
+                <!-- Skeleton — Clima Actual -->
+                <div class="clima-tarjetas" id="clima-skeleton" hidden>
+                    <div class="clima-tarjeta skeleton skeleton-card"></div>
+                    <div class="clima-tarjeta skeleton skeleton-card"></div>
+                    <div class="clima-tarjeta skeleton skeleton-card"></div>
+                </div>
+
+                <!-- Tarjeta de Error Global -->
+                <div class="error-global" id="global-error" hidden>
+                    <span class="material-symbols-outlined error-global__icon" aria-hidden="true">wifi_off</span>
+                    <h2 class="error-global__title" data-i18n="error_titulo">Algo salió mal</h2>
+                    <p class="error-global__msg" id="global-error-msg" data-i18n="error_desc">No pudimos conectar con el servidor. Por favor, verifica tu conexión.</p>
+                    <button class="error-global__btn-retry" id="btn-reintentar-global">
+                        <span class="material-symbols-outlined" aria-hidden="true">refresh</span>
+                        <span data-i18n="reintentar">Reintentar</span>
+                    </button>
+                </div>
+
+                <!-- Tarjetas de métricas (visibles tras búsqueda) -->
+                <div class="clima-tarjetas" id="clima-tarjetas" aria-live="polite" hidden>
+
+                    <!-- Temperatura -->
+                    <div class="clima-tarjeta" id="tarjeta-temperatura">
+                        <p class="clima-tarjeta__etiqueta" data-i18n="temperatura">Temperature</p>
+                        <div class="clima-tarjeta__valor-fila">
+                            <span class="clima-tarjeta__num" id="clima-temp">—</span>
+                            <span class="clima-tarjeta__unidad-primaria">°C</span>
+                        </div>
+                        <p class="clima-tarjeta__sub" id="clima-descripcion">
+                            <span class="material-symbols-outlined clima-tarjeta__flecha"
+                                aria-hidden="true">arrow_upward</span>
+                            <span id="clima-descripcion-texto">—</span>
+                        </p>
+                    </div>
+
+                    <!-- Viento -->
+                    <div class="clima-tarjeta" id="tarjeta-viento">
+                        <p class="clima-tarjeta__etiqueta" data-i18n="viento">Wind</p>
+                        <div class="clima-tarjeta__valor-fila">
+                            <span class="clima-tarjeta__num" id="clima-viento">—</span>
+                            <span class="clima-tarjeta__unidad">km/h</span>
+                        </div>
+                        <div class="viento-badges" id="viento-badges">
+                            <span class="viento-badge" id="viento-dir">—</span>
+                            <span class="viento-badge viento-badge--borde" id="viento-estado"
+                                data-i18n="viento_estable">Steady</span>
+                        </div>
+                    </div>
+
+                    <!-- Humedad -->
+                    <div class="clima-tarjeta" id="tarjeta-humedad">
+                        <p class="clima-tarjeta__etiqueta" data-i18n="humedad">Humidity</p>
+                        <div class="clima-tarjeta__valor-fila">
+                            <span class="clima-tarjeta__num" id="clima-humedad">—</span>
+                            <span class="clima-tarjeta__unidad">%</span>
+                        </div>
+                        <div class="barra-progreso" role="progressbar" aria-label="Nivel de humedad" aria-valuenow="0"
+                            aria-valuemin="0" aria-valuemax="100">
+                            <div class="barra-progreso__fill" id="humedad-barra"></div>
+                        </div>
+                    </div>
+
+                    <!-- Sensación térmica -->
+                    <div class="clima-tarjeta" id="tarjeta-sensacion">
+                        <p class="clima-tarjeta__etiqueta" data-i18n="sensacion">Feels Like</p>
+                        <div class="clima-tarjeta__valor-fila">
+                            <span class="clima-tarjeta__num" id="clima-sensacion">—</span>
+                            <span class="clima-tarjeta__unidad">°C</span>
+                        </div>
+                        <p class="clima-tarjeta__delta" id="clima-delta" data-i18n="delta_index">Delta: — Index</p>
+                    </div>
+
+                </div>
+
+                <!-- Late Analysis -->
+                <div class="late-analysis" id="late-analysis" hidden>
+                    <div class="late-analysis__header">
+                        <span class="material-symbols-outlined" aria-hidden="true">schedule</span>
+                        <h4 data-i18n="late_analysis">Late Analysis</h4>
+                    </div>
+                    <ul class="late-analysis__lista" id="late-analysis-lista" aria-label="Análisis nocturno">
+                        <!-- Se renderizan dinámicamente -->
+                    </ul>
+                </div>
+
+                <!-- Feedback guardar ciudad -->
+                <div class="feedback-msg" id="feedback-guardar" role="alert" aria-live="polite" hidden></div>
+
+            </section>
+
+            <!-- ===== ZONA 2 — Pronóstico 12H ===== -->
+            <section class="zona-2" id="zona-horas" aria-label="Pronóstico por horas">
+
+                <div class="zona-2__cabecera">
+                    <h3 class="zona-2__titulo" data-i18n="pronostico_horas">12-Hour Forecast</h3>
+                    <span class="zona-2__granularidad" data-i18n="granularidad">Granularity: 60min</span>
+                </div>
+
+                <!-- Tabla 5 columnas: TIME | STATUS | TEMP | PRECIP | UV -->
+                <div class="tabla-horas-wrapper" id="tabla-horas-wrapper">
+                    <table class="tabla-horas" aria-label="Pronóstico por hora" id="tabla-horas">
+                        <thead>
+                            <tr>
+                                <th scope="col" data-i18n="hora">Time</th>
+                                <th scope="col" data-i18n="estado">Status</th>
+                                <th scope="col" data-i18n="temp_col">Temp</th>
+                                <th scope="col" data-i18n="precip_col">Precip</th>
+                                <th scope="col" data-i18n="uv_col">UV</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-horas-body">
+                            <!-- Se renderizan dinámicamente -->
+                        </tbody>
+                    </table>
+
+                    <!-- Skeleton — Tabla Horas -->
+                    <div id="tabla-horas-skeleton" hidden>
+                        <div class="skeleton-row skeleton"></div>
+                        <div class="skeleton-row skeleton"></div>
+                        <div class="skeleton-row skeleton"></div>
+                        <div class="skeleton-row skeleton"></div>
+                        <div class="skeleton-row skeleton"></div>
+                        <div class="skeleton-row skeleton"></div>
+                    </div>
+                </div>
+
+                <!-- Tendencia SVG -->
+                <div class="tendencia" aria-hidden="true">
+                    <div class="tendencia__cabecera">
+                        <h4 data-i18n="tendencia">Atmospheric Trend (12H)</h4>
+                        <span class="tendencia__live" data-i18n="live_projection">Live Projection</span>
+                    </div>
+                    <div class="tendencia__contenedor">
+                        <svg class="tendencia__svg" id="tendencia-svg" viewBox="0 0 400 100" preserveAspectRatio="none">
+                            <defs>
+                                <linearGradient id="grad-linea" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" style="stop-color:var(--color-primario);stop-opacity:0.4" />
+                                    <stop offset="100%" style="stop-color:var(--color-primario);stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                            <path id="tendencia-path" class="tendencia__linea" d="" />
+                            <g id="tendencia-puntos"></g>
+                        </svg>
+                        <div class="tendencia__etiquetas" id="tendencia-etiquetas"></div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- ===== ZONA 3 — Mapa ===== -->
+            <section class="zona-3" id="zona-mapa" aria-label="Mapa de ubicación">
+
+                <!-- Mapa interactivo Leaflet + controles encima -->
+                <div class="mapa__fondo">
+                    <div id="leaflet-map" class="mapa__leaflet" aria-label="Mapa interactivo de la ciudad"></div>
+                    <!-- Botones flotantes sobre el mapa -->
+                    <div class="mapa__controles">
+                        <button class="mapa__ctrl-btn" id="mapa-btn-capas" aria-label="Cambiar capa" data-tooltip="Térmico">
+                            <span class="material-symbols-outlined" aria-hidden="true">layers</span>
+                        </button>
+                        <button class="mapa__ctrl-btn" id="mapa-btn-satelite" aria-label="Vista satélite" data-tooltip="Satélite">
+                            <span class="material-symbols-outlined" aria-hidden="true">satellite_alt</span>
+                        </button>
+                        <button class="mapa__ctrl-btn" id="mapa-btn-centrar" aria-label="Centrar en ciudad" data-tooltip="Centrar">
+                            <span class="material-symbols-outlined" aria-hidden="true">my_location</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Panel inferior del mapa — Stability Profile -->
+                <div class="mapa__panel">
+                    <div class="mapa__panel-grid">
+
+                        <!-- Stability Profile -->
+                        <div class="mapa__estabilidad">
+                            <div class="mapa__panel-titulo">
+                                <span class="material-symbols-outlined" aria-hidden="true">insights</span>
+                                <h4 data-i18n="estabilidad">Stability Profile</h4>
+                            </div>
+                            <dl class="mapa__datos">
+                                <div class="mapa__dato-fila">
+                                    <dt data-i18n="presion">Pressure</dt>
+                                    <dd><span id="mapa-presion">—</span> <span class="mapa__unidad">hPa</span></dd>
+                                </div>
+                                <div class="mapa__dato-fila">
+                                    <dt data-i18n="punto_rocio">Dew Point</dt>
+                                    <dd><span id="mapa-rocio">—</span> <span class="mapa__unidad">°C</span></dd>
+                                </div>
+                                <div class="mapa__dato-fila">
+                                    <dt data-i18n="visibilidad">Visibility</dt>
+                                    <dd><span id="mapa-visibilidad">—</span> <span class="mapa__unidad">km</span></dd>
+                                </div>
+                            </dl>
+                        </div>
+
+                        <!-- Thermal Heatmap -->
+                        <div class="mapa__heatmap">
+                            <div class="mapa__heatmap-escala">
+                                <span>10°C</span>
+                                <span>30°C</span>
+                            </div>
+                            <div class="mapa__heatmap-barra" aria-hidden="true"></div>
+                            <p class="mapa__heatmap-label" data-i18n="heatmap">Thermal Heatmap Overlay</p>
+                            <div class="mapa__live">
+                                <span class="mapa__live-dot" aria-hidden="true"></span>
+                                <span data-i18n="stream_live">Stream Live Data</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </section>
+
+        </main>
+        <!-- fin segmented-workspace -->
+
+    </div>
+    <!-- fin layout -->
+
+    <!-- ===== MODAL PERFIL ===== -->
+    <div class="modal-overlay" id="modal-perfil" role="dialog" aria-modal="true" aria-labelledby="modal-perfil-titulo"
+        hidden>
+        <div class="modal">
+            <div class="modal__header">
+                <h2 class="modal__titulo" id="modal-perfil-titulo" data-i18n="editar_perfil">Editar perfil</h2>
+                <button class="modal__cerrar" id="btn-cerrar-modal-perfil" aria-label="Cerrar modal">
+                    <span class="material-symbols-outlined" aria-hidden="true">close</span>
+                </button>
+            </div>
+            <form class="modal__form" id="form-perfil" novalidate>
+
+                <!-- Nombre completo -->
+                <div class="form-grupo">
+                    <label class="form-grupo__label" for="perfil-input-nombre">
+                        <span class="material-symbols-outlined" aria-hidden="true">person</span>
+                        <span data-i18n="campo_nombre">Nombre completo</span>
+                    </label>
+                    <input type="text" id="perfil-input-nombre" class="form-grupo__input" placeholder="Juan Pérez"
+                        autocomplete="name" />
+                </div>
+
+                <!-- Correo electrónico -->
+                <div class="form-grupo">
+                    <label class="form-grupo__label" for="perfil-input-email">
+                        <span class="material-symbols-outlined" aria-hidden="true">mail</span>
+                        <span data-i18n="campo_email">Correo electrónico</span>
+                    </label>
+                    <input type="email" id="perfil-input-email" class="form-grupo__input"
+                        placeholder="usuario@ejemplo.com" autocomplete="email" />
+                </div>
+
+                <!-- Contraseña -->
+                <div class="form-grupo">
+                    <label class="form-grupo__label" for="perfil-input-pass">
+                        <span class="material-symbols-outlined" aria-hidden="true">lock</span>
+                        <span data-i18n="campo_password">Contraseña</span>
+                    </label>
+                    <div class="form-grupo__pass-wrap">
+                        <input type="password" id="perfil-input-pass" class="form-grupo__input"
+                            placeholder="••••••••••••" autocomplete="new-password" minlength="6" />
+                        <button type="button" class="form-grupo__ojo" id="perfil-ojo-pass"
+                            aria-label="Mostrar contraseña">
+                            <span class="material-symbols-outlined" aria-hidden="true">visibility</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Foto de perfil -->
+                <div class="form-grupo">
+                    <label class="form-grupo__label">
+                        <span class="material-symbols-outlined" aria-hidden="true">photo_camera</span>
+                        <span data-i18n="campo_avatar">Foto de perfil</span>
+                    </label>
+                    <div class="form-grupo__avatar-wrap">
+                        <div class="avatar-preview" id="avatar-preview" aria-hidden="true">
+                            <span class="material-symbols-outlined" aria-hidden="true">account_circle</span>
+                            <img id="avatar-preview-img" src="" alt="" hidden />
+                        </div>
+                        <div class="form-grupo__avatar-opciones">
+                            <div class="form-grupo__opcion">
+                                <label class="form-grupo__opcion-label" for="perfil-input-avatar">URL WEB</label>
+                                <input type="url" id="perfil-input-avatar" class="form-grupo__input"
+                                    placeholder="https://..." />
+                            </div>
+                            <div class="form-grupo__opcion">
+                                <p class="form-grupo__opcion-label">ARCHIVO LOCAL</p>
+                                <label class="form-grupo__btn-upload" for="perfil-input-file">
+                                    <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
+                                    <span data-i18n="subir_archivo">Subir imagen</span>
+                                    <input type="file" id="perfil-input-file" class="sr-only" accept="image/*"
+                                        aria-label="Subir imagen desde dispositivo" />
+                                </label>
+                                <span class="form-grupo__archivo-nombre" id="perfil-archivo-nombre"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-grupo__feedback" id="perfil-feedback" role="alert" aria-live="polite" hidden></div>
+
+                <div class="modal__acciones">
+                    <button type="button" class="btn-secundario" id="btn-cancelar-perfil">
+                        <span data-i18n="cancelar">Cancelar</span>
+                    </button>
+                    <button type="submit" class="btn-primario" id="btn-guardar-perfil">
+                        <span class="material-symbols-outlined" aria-hidden="true">save</span>
+                        <span data-i18n="guardar">Guardar</span>
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== OVERLAY SIDEBAR MÓVIL ===== -->
+    <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true" hidden></div>
+
+    <!-- Leaflet.js -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="assets/js/i18n.js"></script>
+    <script src="assets/js/main.js"></script>
+</body>
+
+</html>

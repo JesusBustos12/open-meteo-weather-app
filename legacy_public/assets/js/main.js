@@ -45,10 +45,11 @@ const CODIGOS_CLIMA = {
    ESTADO
    ===================================================== */
 const estado = {
+  tema: localStorage.getItem('theme') || 'dark',
   idioma: obtenerIdiomaActual(),
-  tema: 'dark',
   ciudadesGuardadas: [],
-  perfil: { nombre: '', avatar: '' },
+  perfil: { nombre: '', avatar: '', email: '' },
+  avatarEditado: null,
   ultimaBusqueda: null,
   sugerenciasActivas: [],
   timerSugerencias: null,
@@ -342,13 +343,13 @@ function _setAvatar(contenedor, avatar, nombre) {
 }
 
 function abrirModalPerfil() {
-  // Cargar datos del perfil
   dom.inputNombre.value = estado.perfil.nombre;
-  dom.inputAvatar.value = estado.perfil.avatar;
-  actualizarPreviewAvatar(estado.perfil.avatar);
-
-  dom.inputEmail.value = estado.perfil.email || '';
+  dom.inputEmail.value = estado.perfil.email;
   dom.inputPass.value = '';
+  dom.inputAvatar.value = '';
+  estado.avatarEditado = estado.perfil.avatar;
+  
+  actualizarPreviewAvatar(estado.perfil.avatar);
 
   if (dom.archivoNombre) dom.archivoNombre.textContent = '';
   ocultar(dom.perfilFeedback);
@@ -403,7 +404,7 @@ async function guardarPerfil(e) {
   if (btnGuardar.disabled) return;
 
   const nombre = dom.inputNombre.value.trim();
-  const avatar = dom.inputAvatar.value.trim();
+  const avatar = estado.avatarEditado || '';
   const emailNuevo = dom.inputEmail.value.trim();
   const passNuevo = dom.inputPass.value;
 
@@ -1316,7 +1317,13 @@ async function initApp() {
   dom.btnCerrarModal.addEventListener('click', (e) => { e.preventDefault(); cerrarModalPerfil(); });
   dom.btnCancelarPerfil.addEventListener('click', (e) => { e.preventDefault(); cerrarModalPerfil(); });
   dom.formPerfil.addEventListener('submit', guardarPerfil);
-  dom.inputAvatar.addEventListener('input', () => actualizarPreviewAvatar(dom.inputAvatar.value.trim()));
+  
+  // Si escribe una URL a mano, actualizamos el estado
+  dom.inputAvatar.addEventListener('input', () => {
+    estado.avatarEditado = dom.inputAvatar.value.trim();
+    actualizarPreviewAvatar(estado.avatarEditado);
+  });
+  
   dom.modalPerfil.addEventListener('click', (e) => { if (e.target === dom.modalPerfil) cerrarModalPerfil(); });
 
   /* Toggle ojo contraseña */
@@ -1334,7 +1341,8 @@ async function initApp() {
     if (dom.archivoNombre) dom.archivoNombre.textContent = file.name;
     const reader = new FileReader();
     reader.onload = (ev) => {
-      dom.inputAvatar.value = ev.target.result;  // base64 data URL
+      dom.inputAvatar.value = '';  // Vaciamos el input para que no se trunque el string
+      estado.avatarEditado = ev.target.result; // guardamos en memoria
       actualizarPreviewAvatar(ev.target.result);
     };
     reader.readAsDataURL(file);
