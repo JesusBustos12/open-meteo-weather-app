@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useStore } from '../lib/store';
 import { useTranslation } from '../hooks/useTranslation';
 
@@ -18,6 +18,8 @@ export default function ProfileModal({ isOpen, onClose }) {
   const [showPassword, setShowPassword] = useState(false);
   const [fileName, setFileName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isSlowProcess, setIsSlowProcess] = useState(false);
+  const abortControllerRef = useRef(null);
 
   // Sync form with user state when opened
   useEffect(() => {
@@ -59,18 +61,49 @@ export default function ProfileModal({ isOpen, onClose }) {
     reader.readAsDataURL(file);
   };
 
+  const handleCancel = () => {
+    if (isSaving && abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    onClose();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSaving) return;
+
     setIsSaving(true);
+    setIsSlowProcess(false);
+    
+    abortControllerRef.current = new AbortController();
+
+    // Iniciar temporizador para detectar si el proceso es lento (1 segundo)
+    const slowTimer = setTimeout(() => {
+      setIsSlowProcess(true);
+      
+      // Si es lento, mostramos popup y damos 6 segundos antes de forzar el cierre
+      setTimeout(() => {
+        setIsSaving(false);
+        setIsSlowProcess(false);
+        onClose();
+        // Nota: NO abortamos la petición, dejamos que termine en segundo plano
+      }, 6000);
+    }, 1000);
+
     try {
-      const success = await updateProfile(formData);
+      const success = await updateProfile(formData, abortControllerRef.current.signal);
+      
+      clearTimeout(slowTimer);
       if (success) {
         onClose();
       }
     } catch (err) {
+      clearTimeout(slowTimer);
       console.error("Error en handleSubmit:", err);
     } finally {
+      // Solo actualizamos si no se ha cerrado ya por el temporizador de 6s
       setIsSaving(false);
+      setIsSlowProcess(false);
     }
   };
 
@@ -86,7 +119,7 @@ export default function ProfileModal({ isOpen, onClose }) {
       <div className="modal">
         <div className="modal__header">
           <h2 className="modal__titulo" id="modal-perfil-titulo">{t('editar_perfil')}</h2>
-          <button className="modal__cerrar" onClick={onClose} aria-label="Cerrar modal">
+          <button className="modal__cerrar" onClick={handleCancel} aria-label="Cerrar modal">
             <span className="material-symbols-outlined" aria-hidden="true">close</span>
           </button>
         </div>
@@ -204,7 +237,7 @@ export default function ProfileModal({ isOpen, onClose }) {
           </div>
 
           <div className="modal__acciones">
-            <button type="button" className="btn-secundario" onClick={onClose} disabled={isSaving}>
+            <button type="button" className="btn-secundario" onClick={handleCancel}>
               <span>{t('cancelar')}</span>
             </button>
             <button type="submit" className="btn-primario" disabled={isSaving}>
@@ -218,6 +251,25 @@ export default function ProfileModal({ isOpen, onClose }) {
             </button>
           </div>
         </form>
+
+        {/* POPUP DE PROCESO LENTO */}
+        {isSlowProcess && (
+          <div style={{
+            position: 'absolute', inset: 0, backgroundColor: 'var(--color-fondo-transparente, rgba(0,0,0,0.8))',
+            display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+            borderRadius: 'var(--radius-lg, 12px)', padding: '2rem', textAlign: 'center', zIndex: 10,
+            backdropFilter: 'blur(4px)'
+          }}>
+            <div className="loader__spinner" style={{ width: '50px', height: '50px', borderWidth: '5px', marginBottom: '1rem' }}></div>
+            <h3 style={{ color: 'var(--color-texto, #fff)', fontSize: '1.25rem', marginBottom: '0.5rem' }}>
+              Guardando cambios...
+            </h3>
+            <p style={{ color: 'var(--color-texto-mutado, #aaa)', fontSize: '0.9rem', lineHeight: '1.4' }}>
+              El recurso que estás subiendo es pesado y tardará un poco en procesarse, pero los cambios se aplicarán en breve.
+              <br /><br />Esta ventana se cerrará automáticamente en unos segundos.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
