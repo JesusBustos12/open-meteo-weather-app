@@ -1265,6 +1265,10 @@ ul {
   transition: background var(--t-m), color var(--t-m), border-color var(--t-m), box-shadow var(--t-m);
 }
 
+.clima-tarjeta * {
+  transition: background var(--t-m), color var(--t-m), border-color var(--t-m);
+}
+
 .clima-tarjeta__etiqueta {
   font-size: 1.1rem;
   font-weight: 700;
