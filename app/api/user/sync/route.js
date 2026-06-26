@@ -4,6 +4,8 @@ import { withAuth } from '../../../../lib/withAuth';
 import { logger } from '../../../../lib/logger';
 
 export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+export const revalidate = 0;
 
 async function handler(req) {
   try {

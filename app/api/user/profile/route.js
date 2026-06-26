@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import bcrypt from 'bcryptjs';
 import pool from '../../../../lib/db';
 import { withAuth } from '../../../../lib/withAuth';
@@ -46,6 +47,10 @@ async function handler(req) {
     if (result.affectedRows === 0) {
       console.warn("WARNING: El UPDATE no afectó a ninguna fila. El ID del usuario podría no existir o los datos eran idénticos.");
     }
+
+    // PURGAR CACHÉ DEL SERVIDOR DE NEXT.JS PARA QUE LA SIGUIENTE LLAMADA A SYNC TRAIGA LO NUEVO
+    revalidatePath('/api/user/sync');
+    revalidatePath('/api/auth/login');
 
     return NextResponse.json({ 
       success: true, 
