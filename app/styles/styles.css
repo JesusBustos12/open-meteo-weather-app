@@ -1334,6 +1334,7 @@ ul {
   background: var(--color-card);
   border: 1px solid var(--color-borde);
   border-radius: var(--radio-sm);
+  transition: background var(--t-m), color var(--t-m), border-color var(--t-m), box-shadow var(--t-m);
 }
 
 .clima-tarjeta__etiqueta {
