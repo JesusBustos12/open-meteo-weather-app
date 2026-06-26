@@ -361,7 +361,23 @@ function abrirModalPerfil() {
   setTimeout(() => dom.inputNombre.focus(), 50);
 }
 
+let perfilAbortController = null;
+let perfilSlowTimer = null;
+
 function cerrarModalPerfil() {
+  if (perfilAbortController) {
+    perfilAbortController.abort();
+    perfilAbortController = null;
+  }
+  if (perfilSlowTimer) {
+    clearTimeout(perfilSlowTimer);
+    perfilSlowTimer = null;
+  }
+  
+  // Quitar popup si existe
+  const popup = document.getElementById('popup-lento-perfil');
+  if (popup) popup.remove();
+
   ocultar(dom.modalPerfil);
   if (estado.elementoPrevioFoco) {
     estado.elementoPrevioFoco.focus();
@@ -381,12 +397,16 @@ function actualizarPreviewAvatar(url) {
 
 async function guardarPerfil(e) {
   e.preventDefault();
+  
+  // Evitar doble clic
+  const btnGuardar = document.getElementById('btn-guardar-perfil');
+  if (btnGuardar.disabled) return;
+
   const nombre = dom.inputNombre.value.trim();
   const avatar = dom.inputAvatar.value.trim();
   const emailNuevo = dom.inputEmail.value.trim();
   const passNuevo = dom.inputPass.value;
 
-  const btnGuardar = document.getElementById('btn-guardar-perfil');
   const spanIcono = btnGuardar.querySelector('.material-symbols-outlined');
   const spanTexto = btnGuardar.querySelector('span:not(.material-symbols-outlined)');
   const textoOriginal = spanTexto.textContent;
@@ -398,37 +418,92 @@ async function guardarPerfil(e) {
   spanIcono.textContent = 'sync';
   spanIcono.classList.add('icono-cargando');
 
+  // Guardar estado previo para revertir si falla
+  const estadoPrevio = { ...estado.perfil };
+
+  // 1. Actualización Optimista Local
+  estado.perfil = { nombre, avatar, email: emailNuevo || estado.perfil.email };
+  renderizarPerfil();
+
+  perfilAbortController = new AbortController();
+
+  // Temporizador para popup de carga lenta
+  perfilSlowTimer = setTimeout(() => {
+    const popupHTML = `
+      <div id="popup-lento-perfil" style="position: absolute; inset: 0; background-color: var(--color-fondo-transparente, rgba(0,0,0,0.8)); display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: var(--radius-lg, 12px); padding: 2rem; text-align: center; z-index: 10; backdrop-filter: blur(4px);">
+        <div class="loader__spinner" style="width: 50px; height: 50px; border-width: 5px; margin-bottom: 1rem;"></div>
+        <h3 style="color: var(--color-texto, #fff); font-size: 1.25rem; margin-bottom: 0.5rem;">Guardando cambios...</h3>
+        <p style="color: var(--color-texto-mutado, #aaa); font-size: 0.9rem; line-height: 1.4;">El recurso que estás subiendo es pesado y tardará un poco en procesarse, pero los cambios se aplicarán en breve.<br><br>Esta ventana se cerrará automáticamente en unos segundos.</p>
+      </div>
+    `;
+    dom.modalPerfil.querySelector('.modal').insertAdjacentHTML('beforeend', popupHTML);
+
+    // Auto-cierre a los 6 segundos de aparecer el popup
+    setTimeout(() => {
+      // Restauramos botones y cerramos modal para liberar al usuario (sin abortar petición)
+      btnGuardar.disabled = false;
+      spanTexto.textContent = textoOriginal;
+      spanIcono.textContent = iconoOriginal;
+      spanIcono.classList.remove('icono-cargando');
+      
+      // Anulamos el abortController para que cerrarModalPerfil no cancele la petición
+      perfilAbortController = null; 
+      cerrarModalPerfil();
+    }, 6000);
+  }, 1000);
+
   try {
     const res = await fetch('/api/user/profile', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: nombre, email: emailNuevo, password: passNuevo, avatar_url: avatar })
+      body: JSON.stringify({ name: nombre, email: emailNuevo, password: passNuevo, avatar_url: avatar }),
+      signal: perfilAbortController.signal
     });
     
+    if (perfilSlowTimer) clearTimeout(perfilSlowTimer);
+
     if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || 'Error en servidor');
     }
 
-    // Actualizar perfil local en memoria
-    estado.perfil = { nombre, avatar, email: emailNuevo || estado.perfil.email };
-    renderizarPerfil();
-
+    // Ya hicimos actualización optimista, así que si llegamos aquí, fue exitoso.
     mostrarFeedbackModal(t('perfil_guardado') || 'Perfil guardado', 'exito');
-    setTimeout(() => {
+    
+    // Si la ventana aún sigue abierta (fue rápido), la cerramos de inmediato
+    if (document.getElementById('modal-perfil').style.display !== 'none') {
+        perfilAbortController = null; // para no abortar al cerrar
         cerrarModalPerfil();
-        // Restaurar botón después de cerrar
-        btnGuardar.disabled = false;
-        spanTexto.textContent = textoOriginal;
-        spanIcono.textContent = iconoOriginal;
-        spanIcono.classList.remove('icono-cargando');
-    }, 1200);
+    }
+    
+    // Restaurar botón siempre por si abren el modal de nuevo
+    btnGuardar.disabled = false;
+    spanTexto.textContent = textoOriginal;
+    spanIcono.textContent = iconoOriginal;
+    spanIcono.classList.remove('icono-cargando');
 
   } catch (err) {
-    console.error('Error actualizando perfil:', err);
-    mostrarFeedbackModal('Error local al guardar', 'error');
+    if (perfilSlowTimer) clearTimeout(perfilSlowTimer);
     
-    // Restaurar botón en caso de error
+    if (err.name === 'AbortError') {
+      console.log('Petición de perfil abortada por el usuario');
+      // Revertir
+      estado.perfil = estadoPrevio;
+      renderizarPerfil();
+      mostrarFeedbackModal('Guardado cancelado', 'error');
+    } else {
+      console.error('Error actualizando perfil:', err);
+      // Revertir
+      estado.perfil = estadoPrevio;
+      renderizarPerfil();
+      mostrarFeedbackModal('Error de conexión', 'error');
+    }
+    
+    // Quitar popup si estaba
+    const popup = document.getElementById('popup-lento-perfil');
+    if (popup) popup.remove();
+
+    // Restaurar botón
     btnGuardar.disabled = false;
     spanTexto.textContent = textoOriginal;
     spanIcono.textContent = iconoOriginal;
