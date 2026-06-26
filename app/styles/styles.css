@@ -537,7 +537,7 @@ ul {
   display: flex;
   align-items: center;
   gap: 0.8rem;
-  font-size: 1.1rem;
+  font-size: 1.3rem;
   font-weight: 700;
   color: var(--color-texto-3);
   letter-spacing: 0.2em;
@@ -556,7 +556,7 @@ ul {
 }
 
 .localidades-lista__vacio {
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   color: var(--color-texto-3);
   padding: 0.8rem 1.2rem;
 }
@@ -583,7 +583,7 @@ ul {
 
 .localidad-item__nombre {
   flex: 1;
-  font-size: 1.3rem;
+  font-size: 1.5rem;
   font-weight: 500;
 }
 
@@ -614,7 +614,7 @@ ul {
   display: flex;
   align-items: center;
   gap: 1.2rem;
-  font-size: 1.3rem;
+  font-size: 1.5rem;
   font-weight: 500;
   color: var(--color-texto-4);
   transition: color var(--t-r);
