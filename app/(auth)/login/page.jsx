@@ -1,18 +1,45 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useStore } from '../../../lib/store';
 import { useTranslation } from '../../../hooks/useTranslation';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { setLanguage } = useStore();
+  const { user, syncFromBackend, setLanguage } = useStore();
   const { t, language } = useTranslation();
   
   const [activeTab, setActiveTab] = useState('login'); // 'login' | 'registro'
   const [feedback, setFeedback] = useState({ msg: '', type: '', visible: false });
   const [loading, setLoading] = useState(false);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      await syncFromBackend();
+      setIsCheckingSession(false);
+    };
+    checkAuth();
+  }, [syncFromBackend]);
+
+  useEffect(() => {
+    if (!isCheckingSession && user) {
+      router.replace('/');
+    }
+  }, [user, isCheckingSession, router]);
+
+  if (isCheckingSession || user) {
+    return (
+      <div className="pagina" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: 'var(--color-fondo, #121212)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+            <img src="/clima.png" alt="WeatherApp Logo" style={{ width: '64px', height: '64px', objectFit: 'contain' }} />
+            <h1 style={{ fontSize: '2.5rem', margin: 0, fontWeight: '700', color: 'var(--color-texto, #ffffff)' }}>WeatherApp</h1>
+        </div>
+        <div className="loader__spinner" style={{ width: '40px', height: '40px', borderWidth: '4px' }}></div>
+      </div>
+    );
+  }
   
   // Login State
   const [loginEmail, setLoginEmail] = useState('');

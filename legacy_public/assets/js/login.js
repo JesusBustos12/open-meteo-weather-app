@@ -23,11 +23,18 @@ async function verificarSesion() {
             const data = await res.json();
             if (data.user) {
                 window.location.replace('dashboard.html');
+                return;
             }
         }
     } catch (e) {
         // Ignorar errores de red
     }
+    
+    // Si no hay sesión, quitar splash y mostrar login
+    const splash = document.getElementById('splash-screen');
+    const main = document.getElementById('main-content');
+    if (splash) splash.style.display = 'none';
+    if (main) main.style.display = 'flex'; // o 'block' dependiendo del css original
 }
 
 /* ===== DOM ===== */
