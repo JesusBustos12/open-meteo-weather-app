@@ -3,6 +3,8 @@ import pool from '../../../../lib/db';
 import { withAuth } from '../../../../lib/withAuth';
 import { logger } from '../../../../lib/logger';
 
+export const dynamic = 'force-dynamic';
+
 async function handler(req) {
   try {
     const userId = req.userId;

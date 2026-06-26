@@ -5,6 +5,9 @@ import { withAuth } from '../../../../lib/withAuth';
 import { isValidEmail, isValidPassword, isValidName } from '../../../../lib/validators';
 import { logger } from '../../../../lib/logger';
 
+export const dynamic = 'force-dynamic';
+
+
 async function handler(req) {
   try {
     const userId = req.userId;
@@ -14,9 +17,14 @@ async function handler(req) {
       return NextResponse.json({ error: 'Nombre y email válidos son obligatorios' }, { status: 400 });
     }
 
+    // Normalizar a null para evitar errores en mysql2 si llega undefined
+    const normalizedName = name !== undefined ? name : null;
+    const normalizedEmail = email !== undefined ? email.toLowerCase() : null;
+    const normalizedAvatar = avatar_url !== undefined ? avatar_url : null;
+
     // 1. Actualizar datos básicos y avatar
     let query = 'UPDATE users SET name = ?, email = ?, avatar_url = ?';
-    let params = [name, email.toLowerCase(), avatar_url];
+    let params = [normalizedName, normalizedEmail, normalizedAvatar];
 
     // 2. Si hay password, hashearla e incluirla (si es válida)
     if (password && password.trim().length > 0) {
