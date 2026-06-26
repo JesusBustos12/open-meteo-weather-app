@@ -45,11 +45,11 @@ export default function Dashboard() {
   if (loading || !user) {
     return (
       <div className="layout" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: 'var(--color-fondo, #121212)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-            <img src="/clima.png" alt="WeatherApp Logo" style={{ width: '64px', height: '64px', objectFit: 'contain' }} />
-            <h1 style={{ fontSize: '2.5rem', margin: 0, fontWeight: '700', color: 'var(--color-texto, #ffffff)' }}>WeatherApp</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '32px' }}>
+            <img src="/clima.png" alt="WeatherApp Logo" style={{ width: '120px', height: '120px', objectFit: 'contain' }} />
+            <h1 style={{ fontSize: '4.5rem', margin: 0, fontWeight: '700', color: 'var(--color-texto, #ffffff)' }}>WeatherApp</h1>
         </div>
-        <div className="loader__spinner" style={{ width: '40px', height: '40px', borderWidth: '4px' }}></div>
+        <div className="loader__spinner" style={{ width: '60px', height: '60px', borderWidth: '6px' }}></div>
       </div>
     );
   }
