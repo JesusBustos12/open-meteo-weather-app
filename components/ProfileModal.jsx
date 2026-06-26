@@ -262,7 +262,7 @@ export default function ProfileModal({ isOpen, onClose }) {
             backdropFilter: 'blur(8px)', padding: '1.5rem'
           }}>
             <div style={{
-              backgroundColor: 'var(--color-tarjeta, rgba(30,30,30,0.95))',
+              backgroundColor: 'var(--color-card, rgba(30,30,30,0.95))',
               border: '1px solid var(--color-borde, rgba(255,255,255,0.1))',
               borderRadius: '16px', padding: '2.5rem 2rem', textAlign: 'center',
               boxShadow: '0 10px 40px rgba(0,0,0,0.4)', width: '100%', maxWidth: '400px'
