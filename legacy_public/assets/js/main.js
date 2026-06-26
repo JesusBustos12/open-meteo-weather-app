@@ -1183,7 +1183,13 @@ async function cerrarSesion() {
 /** Verifica si hay sesión activa y sincroniza estado global con DB */
 async function verificarSesion() {
   try {
-      const res = await fetch('/api/user/sync');
+      const res = await fetch('/api/user/sync', {
+          headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0'
+          }
+      });
       if (!res.ok) throw new Error('No autorizado');
       
       const data = await res.json();

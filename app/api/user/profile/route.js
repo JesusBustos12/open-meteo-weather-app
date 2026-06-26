@@ -39,7 +39,13 @@ async function handler(req) {
     query += ' WHERE id = ?';
     params.push(userId);
 
-    await pool.execute(query, params);
+    const [result] = await pool.execute(query, params);
+    
+    // DEBUG: Imprimir en servidor para ver si de verdad afectó a la base de datos
+    console.log("UPDATE result:", result);
+    if (result.affectedRows === 0) {
+      console.warn("WARNING: El UPDATE no afectó a ninguna fila. El ID del usuario podría no existir o los datos eran idénticos.");
+    }
 
     return NextResponse.json({ 
       success: true, 

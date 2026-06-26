@@ -14,9 +14,16 @@ async function handler(req) {
     const [cRows] = await pool.execute('SELECT id, name, latitude, longitude FROM favorite_cities WHERE user_id = ?', [userId]);
 
     return NextResponse.json({
+      success: true,
       user: uRows[0],
-      preferences: pRows[0],
+      preferences: pRows[0] || null,
       cities: cRows
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      }
     });
   } catch (error) {
     logger.error('Sync Error', { userId: req.userId, error: error.message, stack: error.stack });
