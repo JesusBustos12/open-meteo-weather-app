@@ -71,7 +71,7 @@ export default function Dashboard() {
                 aria-current={!isMapExpanded ? 'page' : undefined}
                 onClick={(e) => {
                     e.preventDefault();
-                    setIsMapExpanded(!isMapExpanded);
+                    setIsMapExpanded(false);
                     setIsSidebarOpen(false);
                 }}
               >
@@ -84,7 +84,7 @@ export default function Dashboard() {
                 aria-current={isMapExpanded ? 'page' : undefined}
                 onClick={(e) => {
                     e.preventDefault();
-                    setIsMapExpanded(!isMapExpanded);
+                    setIsMapExpanded(true);
                     setIsSidebarOpen(false);
                 }}
               >

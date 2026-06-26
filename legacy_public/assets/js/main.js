@@ -1346,20 +1346,13 @@ async function initApp() {
   if (navMap && workspace) {
     navMap.addEventListener('click', (e) => {
       e.preventDefault();
-      const expandido = workspace.classList.toggle('mapa-expandido');
+      workspace.classList.add('mapa-expandido');
 
       // Actualizar estado activo del nav
       [navDash, navMap, navProfile].forEach(n => n?.classList.remove('sidebar__nav-item--activo'));
-      if (expandido) {
-        navMap.classList.add('sidebar__nav-item--activo');
-        navMap.setAttribute('aria-current', 'page');
-        navDash?.removeAttribute('aria-current');
-      } else {
-        navDash?.classList.add('sidebar__nav-item--activo');
-        navDash?.setAttribute('aria-current', 'page');
-        navMap.removeAttribute('aria-current');
-      }
-
+      navMap.classList.add('sidebar__nav-item--activo');
+      navMap.setAttribute('aria-current', 'page');
+      navDash?.removeAttribute('aria-current');
     });
   }
 
