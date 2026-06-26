@@ -430,10 +430,12 @@ async function guardarPerfil(e) {
   // Temporizador para popup de carga lenta
   perfilSlowTimer = setTimeout(() => {
     const popupHTML = `
-      <div id="popup-lento-perfil" style="position: absolute; inset: 0; background-color: var(--color-fondo-transparente, rgba(0,0,0,0.8)); display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: var(--radius-lg, 12px); padding: 2rem; text-align: center; z-index: 10; backdrop-filter: blur(4px);">
-        <div class="loader__spinner" style="width: 50px; height: 50px; border-width: 5px; margin-bottom: 1rem;"></div>
-        <h3 style="color: var(--color-texto, #fff); font-size: 1.25rem; margin-bottom: 0.5rem;">Guardando cambios...</h3>
-        <p style="color: var(--color-texto-mutado, #aaa); font-size: 0.9rem; line-height: 1.4;">El recurso que estás subiendo es pesado y tardará un poco en procesarse, pero los cambios se aplicarán en breve.<br><br>Esta ventana se cerrará automáticamente en unos segundos.</p>
+      <div id="popup-lento-perfil" style="position: absolute; inset: 0; background-color: var(--color-fondo-transparente, rgba(0,0,0,0.6)); display: flex; justify-content: center; align-items: center; border-radius: var(--radius-lg, 12px); padding: 1.5rem; z-index: 10; backdrop-filter: blur(8px);">
+        <div style="background-color: var(--color-tarjeta, rgba(30,30,30,0.95)); border: 1px solid var(--color-borde, rgba(255,255,255,0.1)); border-radius: 16px; padding: 2.5rem 2rem; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.4); width: 100%; max-width: 400px;">
+          <div class="loader__spinner" style="width: 60px; height: 60px; border-width: 6px; margin: 0 auto 1.5rem auto;"></div>
+          <h3 style="color: var(--color-texto, #fff); font-size: 1.8rem; font-weight: 700; margin-bottom: 1rem;">Guardando cambios...</h3>
+          <p style="color: var(--color-texto-mutado, #aaa); font-size: 1.15rem; line-height: 1.6;">El recurso que estás subiendo es pesado y tardará un poco en procesarse, pero los cambios se aplicarán en breve.<br><br><span style="color: var(--color-primario, #3b82f6); font-weight: 600;">Esta ventana se cerrará sola.</span></p>
+        </div>
       </div>
     `;
     dom.modalPerfil.querySelector('.modal').insertAdjacentHTML('beforeend', popupHTML);

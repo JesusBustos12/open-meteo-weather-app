@@ -255,19 +255,28 @@ export default function ProfileModal({ isOpen, onClose }) {
         {/* POPUP DE PROCESO LENTO */}
         {isSlowProcess && (
           <div style={{
-            position: 'absolute', inset: 0, backgroundColor: 'var(--color-fondo-transparente, rgba(0,0,0,0.8))',
-            display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
-            borderRadius: 'var(--radius-lg, 12px)', padding: '2rem', textAlign: 'center', zIndex: 10,
-            backdropFilter: 'blur(4px)'
+            position: 'absolute', inset: 0, 
+            backgroundColor: 'var(--color-fondo-transparente, rgba(0,0,0,0.6))',
+            display: 'flex', justifyContent: 'center', alignItems: 'center',
+            borderRadius: 'var(--radius-lg, 12px)', zIndex: 10,
+            backdropFilter: 'blur(8px)', padding: '1.5rem'
           }}>
-            <div className="loader__spinner" style={{ width: '50px', height: '50px', borderWidth: '5px', marginBottom: '1rem' }}></div>
-            <h3 style={{ color: 'var(--color-texto, #fff)', fontSize: '1.25rem', marginBottom: '0.5rem' }}>
-              Guardando cambios...
-            </h3>
-            <p style={{ color: 'var(--color-texto-mutado, #aaa)', fontSize: '0.9rem', lineHeight: '1.4' }}>
-              El recurso que estás subiendo es pesado y tardará un poco en procesarse, pero los cambios se aplicarán en breve.
-              <br /><br />Esta ventana se cerrará automáticamente en unos segundos.
-            </p>
+            <div style={{
+              backgroundColor: 'var(--color-tarjeta, rgba(30,30,30,0.95))',
+              border: '1px solid var(--color-borde, rgba(255,255,255,0.1))',
+              borderRadius: '16px', padding: '2.5rem 2rem', textAlign: 'center',
+              boxShadow: '0 10px 40px rgba(0,0,0,0.4)', width: '100%', maxWidth: '400px'
+            }}>
+              <div className="loader__spinner" style={{ width: '60px', height: '60px', borderWidth: '6px', margin: '0 auto 1.5rem auto' }}></div>
+              <h3 style={{ color: 'var(--color-texto, #fff)', fontSize: '1.8rem', fontWeight: '700', marginBottom: '1rem' }}>
+                Guardando cambios...
+              </h3>
+              <p style={{ color: 'var(--color-texto-mutado, #aaa)', fontSize: '1.15rem', lineHeight: '1.6' }}>
+                El recurso que estás subiendo es pesado y tardará un poco en procesarse, pero los cambios se aplicarán en breve.
+                <br /><br />
+                <span style={{color: 'var(--color-primario, #3b82f6)', fontWeight: '600'}}>Esta ventana se cerrará sola.</span>
+              </p>
+            </div>
           </div>
         )}
       </div>
