@@ -48,6 +48,8 @@ export default async function handler(req, res) {
   try {
     const { name, email, password, avatar_url } = req.body;
 
+    console.log('[API PROFILE UPDATE] userId:', userId, 'name:', name, 'email:', email, 'hasPassword:', !!(password && password.trim().length > 0), 'hasAvatar:', !!(avatar_url && avatar_url.length > 0), 'avatarLen:', avatar_url?.length || 0);
+
     if (!name || !email) {
       return res.status(400).json({ error: 'Nombre y email son obligatorios' });
     }
@@ -67,18 +69,27 @@ export default async function handler(req, res) {
     query += ' WHERE id = ?';
     params.push(userId);
 
-    await pool.query(query, params);
+    const [result] = await pool.query(query, params);
+    console.log('[API PROFILE UPDATE] UPDATE result:', JSON.stringify(result));
+
+    // VERIFICACIÓN: Leer de la BD para confirmar que se guardó
+    const [verifyRows] = await pool.query('SELECT name, email, avatar_url FROM users WHERE id = ?', [userId]);
+    console.log('[API PROFILE UPDATE] VERIFY after update — name:', verifyRows[0]?.name, 'email:', verifyRows[0]?.email, 'avatarLen:', verifyRows[0]?.avatar_url?.length || 0);
 
     return res.status(200).json({ 
       success: true, 
-      user: { name, email: email.toLowerCase(), avatar_url } 
+      user: { 
+        name: verifyRows[0]?.name || name, 
+        email: verifyRows[0]?.email || email.toLowerCase(), 
+        avatar_url: verifyRows[0]?.avatar_url || avatar_url 
+      } 
     });
 
   } catch (error) {
     if (error.code === 'ER_DUP_ENTRY') {
       return res.status(400).json({ error: 'El email ya está en uso por otro usuario' });
     }
-    console.error('Profile update error:', error.message);
+    console.error('[API PROFILE UPDATE] Error:', error.message, error.stack);
     return res.status(500).json({ error: 'Error del servidor al actualizar perfil' });
   } finally {
     await pool.end();

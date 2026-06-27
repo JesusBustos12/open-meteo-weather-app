@@ -49,13 +49,15 @@ export default async function handler(req, res) {
     const [pRows] = await pool.query('SELECT theme, language FROM user_preferences WHERE user_id = ?', [userId]);
     const [cRows] = await pool.query('SELECT id, name, latitude, longitude FROM favorite_cities WHERE user_id = ?', [userId]);
 
+    console.log('[API SYNC] userId:', userId, 'dbName:', uRows[0]?.name, 'dbEmail:', uRows[0]?.email, 'dbAvatarLen:', uRows[0]?.avatar_url?.length || 0);
+
     return res.status(200).json({
       user: uRows[0],
       preferences: pRows[0],
       cities: cRows
     });
   } catch (error) {
-    console.error('Sync error:', error.message);
+    console.error('[API SYNC] Error:', error.message, error.stack);
     return res.status(500).json({ error: 'Error al sincronizar datos' });
   } finally {
     await pool.end();
