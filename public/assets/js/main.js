@@ -411,6 +411,8 @@ async function guardarPerfil(e) {
   const emailNuevo = dom.inputEmail.value.trim();
   const passNuevo = dom.inputPass.value;
 
+  console.log('[PERFIL] Iniciando guardarPerfil — nombre:', nombre, 'email:', emailNuevo, 'hasPass:', passNuevo.length > 0, 'avatarLen:', avatar.length);
+
   const spanIcono = btnGuardar.querySelector('.material-symbols-outlined');
   const spanTexto = btnGuardar.querySelector('span:not(.material-symbols-outlined)');
   const textoOriginal = spanTexto.textContent;
@@ -463,21 +465,37 @@ async function guardarPerfil(e) {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: nombre, email: emailNuevo, password: passNuevo, avatar_url: avatar }),
-      signal: perfilAbortController.signal
+      signal: perfilAbortController?.signal
     });
     
     if (perfilSlowTimer) clearTimeout(perfilSlowTimer);
 
+    const data = await res.json();
+    console.log('[PERFIL] Respuesta del servidor — status:', res.status, 'data:', JSON.stringify(data).substring(0, 500));
+
     if (!res.ok) {
-        const data = await res.json();
         throw new Error(data.error || 'Error en servidor');
     }
 
-    // Ya hicimos actualización optimista, así que si llegamos aquí, fue exitoso.
+    // ACTUALIZAR estado.perfil con los datos CONFIRMADOS por la BD (no los optimistas)
+    if (data.user) {
+      estado.perfil = {
+        nombre: data.user.name || nombre,
+        avatar: data.user.avatar_url || avatar,
+        email: data.user.email || emailNuevo
+      };
+      renderizarPerfil();
+      console.log('[PERFIL] Estado actualizado con datos del servidor:', JSON.stringify(estado.perfil).substring(0, 300));
+    }
+
+    // Limpiar el estado del avatar subido
+    perfilAvatarState.dataURL = '';
+    perfilAvatarState.tipo = '';
+
     mostrarFeedbackModal(t('perfil_guardado') || 'Perfil guardado', 'exito');
     
-    // Si la ventana aún sigue abierta (fue rápido), la cerramos de inmediato
-    if (document.getElementById('modal-perfil').style.display !== 'none') {
+    // Cerrar modal si sigue abierto
+    if (!dom.modalPerfil.hidden) {
         perfilAbortController = null; // para no abortar al cerrar
         cerrarModalPerfil();
     }
@@ -492,17 +510,17 @@ async function guardarPerfil(e) {
     if (perfilSlowTimer) clearTimeout(perfilSlowTimer);
     
     if (err.name === 'AbortError') {
-      console.log('Petición de perfil abortada por el usuario');
+      console.log('[PERFIL] Petición abortada por el usuario');
       // Revertir
       estado.perfil = estadoPrevio;
       renderizarPerfil();
       mostrarFeedbackModal('Guardado cancelado', 'error');
     } else {
-      console.error('Error actualizando perfil:', err);
+      console.error('[PERFIL] Error actualizando perfil:', err);
       // Revertir
       estado.perfil = estadoPrevio;
       renderizarPerfil();
-      mostrarFeedbackModal('Error de conexión', 'error');
+      mostrarFeedbackModal(err.message || 'Error de conexión', 'error');
     }
     
     // Quitar popup si estaba

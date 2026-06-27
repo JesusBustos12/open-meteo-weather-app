@@ -14,7 +14,10 @@ async function handler(req) {
     const userId = req.userId;
     const { name, email, password, avatar_url } = await req.json();
 
+    console.log('[PROFILE UPDATE] userId:', userId, 'name:', name, 'email:', email, 'hasPassword:', !!(password && password.trim().length > 0), 'hasAvatar:', !!(avatar_url && avatar_url.length > 0), 'avatarLen:', avatar_url?.length || 0);
+
     if (!isValidName(name) || !isValidEmail(email)) {
+      console.log('[PROFILE UPDATE] Validation failed — name valid:', isValidName(name), 'email valid:', isValidEmail(email));
       return NextResponse.json({ error: 'Nombre y email válidos son obligatorios' }, { status: 400 });
     }
 
@@ -40,14 +43,18 @@ async function handler(req) {
     query += ' WHERE id = ?';
     params.push(userId);
 
-    const [result] = await pool.execute(query, params);
+    const [result] = await pool.query(query, params);
     
-    // DEBUG: Imprimir en servidor para ver si de verdad afectó a la base de datos
-    console.log("UPDATE result:", result);
+    console.log('[PROFILE UPDATE] UPDATE result:', JSON.stringify(result));
+
     if (result.affectedRows === 0) {
-      console.warn("WARNING: El UPDATE no afectó a ninguna fila.");
-      throw new Error("El UPDATE no afectó a ninguna fila. (ID no encontrado o datos idénticos)");
+      console.warn('[PROFILE UPDATE] WARNING: 0 rows affected.');
+      return NextResponse.json({ error: 'No se encontró el usuario' }, { status: 404 });
     }
+
+    // 3. VERIFICACIÓN: Leer de la BD para confirmar que se guardó
+    const [verifyRows] = await pool.query('SELECT name, email, avatar_url FROM users WHERE id = ?', [userId]);
+    console.log('[PROFILE UPDATE] VERIFY after update — name:', verifyRows[0]?.name, 'email:', verifyRows[0]?.email, 'avatarLen:', verifyRows[0]?.avatar_url?.length || 0);
 
     // PURGAR CACHÉ DEL SERVIDOR DE NEXT.JS PARA QUE LA SIGUIENTE LLAMADA A SYNC TRAIGA LO NUEVO
     revalidatePath('/api/user/sync');
@@ -55,7 +62,7 @@ async function handler(req) {
 
     return NextResponse.json({ 
       success: true, 
-      user: { name, email: email.toLowerCase(), avatar_url } 
+      user: { name: verifyRows[0]?.name, email: verifyRows[0]?.email, avatar_url: verifyRows[0]?.avatar_url }
     });
 
   } catch (error) {
@@ -63,6 +70,7 @@ async function handler(req) {
       return NextResponse.json({ error: 'El email ya está en uso por otro usuario' }, { status: 400 });
     }
     logger.error('Profile Update Error', { userId: req.userId, error: error.message, stack: error.stack });
+    console.error('[PROFILE UPDATE] CRITICAL ERROR:', error.message, error.stack);
     return NextResponse.json({ error: 'Error del servidor al actualizar perfil' }, { status: 500 });
   }
 }
