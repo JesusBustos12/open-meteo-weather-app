@@ -1349,19 +1349,84 @@ async function initApp() {
     if (icono) icono.textContent = isPass ? 'visibility_off' : 'visibility';
   });
 
+  /* Comprime imagen local a formato WebP usando Canvas */
+  function comprimirAWebP(file, maxDim = 300, calidad = 0.75) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          // Redimensionar manteniendo relación de aspecto si supera maxDim
+          if (width > height) {
+            if (width > maxDim) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          try {
+            // Convertir a WebP
+            const compressedDataURL = canvas.toDataURL('image/webp', calidad);
+            resolve(compressedDataURL);
+          } catch (err) {
+            reject(err);
+          }
+        };
+        img.onerror = (err) => reject(err);
+      };
+      reader.onerror = (err) => reject(err);
+    });
+  }
+
   /* Archivo local → base64 para avatar */
-  dom.inputFile?.addEventListener('change', (e) => {
+  dom.inputFile?.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     if (dom.archivoNombre) dom.archivoNombre.textContent = file.name;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      perfilAvatarState.dataURL = ev.target.result;
-      perfilAvatarState.tipo = 'archivo';
-      dom.inputAvatar.value = ''; // Limpiar el input de URL si se sube archivo
+    
+    // Vista previa rápida síncrona original
+    const quickReader = new FileReader();
+    quickReader.onload = (ev) => {
       actualizarPreviewAvatar(ev.target.result);
     };
-    reader.readAsDataURL(file);
+    quickReader.readAsDataURL(file);
+
+    try {
+      console.log('[PERFIL] Procesando imagen. Tamaño original:', file.size, 'bytes');
+      // Comprimir a WebP en segundo plano
+      const webpDataURL = await comprimirAWebP(file, 300, 0.75);
+      perfilAvatarState.dataURL = webpDataURL;
+      perfilAvatarState.tipo = 'archivo';
+      dom.inputAvatar.value = ''; // Limpiar el input de URL si se sube archivo
+      console.log('[PERFIL] Compresión exitosa a WebP. Tamaño final en base64:', webpDataURL.length, 'caracteres');
+    } catch (err) {
+      console.error('[PERFIL] Error al comprimir imagen, usando fallback sin compresión:', err);
+      // Fallback síncrono por si falla el canvas
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        perfilAvatarState.dataURL = ev.target.result;
+        perfilAvatarState.tipo = 'archivo';
+        dom.inputAvatar.value = '';
+      };
+      reader.readAsDataURL(file);
+    }
   });
   
   // Si el usuario edita el input de URL, limpiamos el estado del archivo
