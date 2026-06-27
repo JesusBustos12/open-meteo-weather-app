@@ -40,7 +40,7 @@ async function handler(req) {
     query += ' WHERE id = ?';
     params.push(userId);
 
-    const [result] = await pool.query(query, params);
+    const [result] = await pool.execute(query, params);
     
     // DEBUG: Imprimir en servidor para ver si de verdad afectó a la base de datos
     console.log("UPDATE result:", result);

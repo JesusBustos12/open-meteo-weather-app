@@ -57,6 +57,9 @@ const estado = {
   errorActivo: false,    // Estado de error global
 };
 
+// Estado para la subida de avatar en edición de perfil
+const perfilAvatarState = { dataURL: '', tipo: '' };
+
 /* =====================================================
    TELEMETRÍA Y LOGGING
    ===================================================== */
@@ -403,7 +406,8 @@ async function guardarPerfil(e) {
   if (btnGuardar.disabled) return;
 
   const nombre = dom.inputNombre.value.trim();
-  const avatar = dom.inputAvatar.value.trim();
+  // Usar el avatar subido por archivo si existe, de lo contrario usar el texto del input
+  const avatar = perfilAvatarState.dataURL || dom.inputAvatar.value.trim();
   const emailNuevo = dom.inputEmail.value.trim();
   const passNuevo = dom.inputPass.value;
 
@@ -1334,10 +1338,19 @@ async function initApp() {
     if (dom.archivoNombre) dom.archivoNombre.textContent = file.name;
     const reader = new FileReader();
     reader.onload = (ev) => {
-      dom.inputAvatar.value = ev.target.result;  // base64 data URL
+      perfilAvatarState.dataURL = ev.target.result;
+      perfilAvatarState.tipo = 'archivo';
+      dom.inputAvatar.value = ''; // Limpiar el input de URL si se sube archivo
       actualizarPreviewAvatar(ev.target.result);
     };
     reader.readAsDataURL(file);
+  });
+  
+  // Si el usuario edita el input de URL, limpiamos el estado del archivo
+  dom.inputAvatar?.addEventListener('input', () => {
+    perfilAvatarState.dataURL = '';
+    perfilAvatarState.tipo = 'url';
+    actualizarPreviewAvatar(dom.inputAvatar.value.trim());
   });
 
   /* Cerrar sesión */
