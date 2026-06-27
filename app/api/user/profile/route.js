@@ -40,12 +40,13 @@ async function handler(req) {
     query += ' WHERE id = ?';
     params.push(userId);
 
-    const [result] = await pool.execute(query, params);
+    const [result] = await pool.query(query, params);
     
     // DEBUG: Imprimir en servidor para ver si de verdad afectó a la base de datos
     console.log("UPDATE result:", result);
     if (result.affectedRows === 0) {
-      console.warn("WARNING: El UPDATE no afectó a ninguna fila. El ID del usuario podría no existir o los datos eran idénticos.");
+      console.warn("WARNING: El UPDATE no afectó a ninguna fila.");
+      throw new Error("El UPDATE no afectó a ninguna fila. (ID no encontrado o datos idénticos)");
     }
 
     // PURGAR CACHÉ DEL SERVIDOR DE NEXT.JS PARA QUE LA SIGUIENTE LLAMADA A SYNC TRAIGA LO NUEVO
