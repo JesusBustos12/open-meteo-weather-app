@@ -67,7 +67,7 @@ export default async function handler(req, res) {
     query += ' WHERE id = ?';
     params.push(userId);
 
-    await pool.execute(query, params);
+    await pool.query(query, params);
 
     return res.status(200).json({ 
       success: true, 

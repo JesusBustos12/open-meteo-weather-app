@@ -45,9 +45,9 @@ export default async function handler(req, res) {
   const pool = getPool();
 
   try {
-    const [uRows] = await pool.execute('SELECT name, email, avatar_url FROM users WHERE id = ?', [userId]);
-    const [pRows] = await pool.execute('SELECT theme, language FROM user_preferences WHERE user_id = ?', [userId]);
-    const [cRows] = await pool.execute('SELECT id, name, latitude, longitude FROM favorite_cities WHERE user_id = ?', [userId]);
+    const [uRows] = await pool.query('SELECT name, email, avatar_url FROM users WHERE id = ?', [userId]);
+    const [pRows] = await pool.query('SELECT theme, language FROM user_preferences WHERE user_id = ?', [userId]);
+    const [cRows] = await pool.query('SELECT id, name, latitude, longitude FROM favorite_cities WHERE user_id = ?', [userId]);
 
     return res.status(200).json({
       user: uRows[0],

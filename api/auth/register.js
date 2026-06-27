@@ -38,13 +38,13 @@ export default async function handler(req, res) {
 
     const hash = await bcrypt.hash(password, 10);
 
-    const [result] = await pool.execute(
+    const [result] = await pool.query(
       'INSERT INTO users (name, email, password_hash, avatar_url) VALUES (?, ?, ?, ?)',
       [name, email.toLowerCase(), hash, avatar || '']
     );
 
     const userId = result.insertId;
-    await pool.execute('INSERT INTO user_preferences (user_id) VALUES (?)', [userId]);
+    await pool.query('INSERT INTO user_preferences (user_id) VALUES (?)', [userId]);
 
     return res.status(201).json({ success: true, user: { name, email, avatar } });
   } catch (error) {

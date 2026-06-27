@@ -48,7 +48,7 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Datos de la ciudad incompletos' });
       }
 
-      await pool.execute(
+      await pool.query(
         'INSERT INTO favorite_cities (user_id, name, latitude, longitude) VALUES (?, ?, ?, ?)',
         [userId, name, latitude, longitude]
       );
@@ -63,7 +63,7 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Nombre de la ciudad es requerido' });
       }
 
-      await pool.execute(
+      await pool.query(
         'DELETE FROM favorite_cities WHERE user_id = ? AND name = ?',
         [userId, cityName]
       );

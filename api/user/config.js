@@ -54,7 +54,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'No hay datos para actualizar' });
     }
 
-    await pool.execute(
+    await pool.query(
       'UPDATE user_preferences SET theme = COALESCE(?, theme), language = COALESCE(?, language) WHERE user_id = ?',
       [normalizedTheme, normalizedLanguage, userId]
     );

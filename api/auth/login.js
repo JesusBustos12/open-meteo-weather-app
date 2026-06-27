@@ -36,7 +36,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Datos inválidos' });
     }
 
-    const [rows] = await pool.execute('SELECT * FROM users WHERE email = ?', [email.toLowerCase()]);
+    const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email.toLowerCase()]);
     const user = rows[0];
 
     if (!user || !(await bcrypt.compare(password, user.password_hash))) {
