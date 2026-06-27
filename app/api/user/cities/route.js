@@ -12,7 +12,7 @@ async function handler(req) {
       return NextResponse.json({ error: 'Datos de la ciudad incompletos' }, { status: 400 });
     }
 
-    await pool.execute(
+    await pool.query(
       'INSERT INTO favorite_cities (user_id, name, latitude, longitude) VALUES (?, ?, ?, ?)',
       [userId, name, latitude, longitude]
     );

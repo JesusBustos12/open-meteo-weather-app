@@ -28,13 +28,13 @@ export async function POST(req) {
 
     const hash = await bcrypt.hash(password, 10);
 
-    const [result] = await pool.execute(
+    const [result] = await pool.query(
       'INSERT INTO users (name, email, password_hash, avatar_url) VALUES (?, ?, ?, ?)',
       [name, email.toLowerCase(), hash, avatar || '']
     );
 
     const userId = result.insertId;
-    await pool.execute('INSERT INTO user_preferences (user_id) VALUES (?)', [userId]);
+    await pool.query('INSERT INTO user_preferences (user_id) VALUES (?)', [userId]);
 
     const response = NextResponse.json({ success: true, user: { name, email, avatar } }, { status: 201 });
     return response;

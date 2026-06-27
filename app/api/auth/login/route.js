@@ -27,7 +27,7 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 });
     }
 
-    const [rows] = await pool.execute('SELECT * FROM users WHERE email = ?', [email.toLowerCase()]);
+    const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email.toLowerCase()]);
     const user = rows[0];
 
     if (!user || !(await bcrypt.compare(password, user.password_hash))) {

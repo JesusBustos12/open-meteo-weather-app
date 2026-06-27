@@ -16,7 +16,7 @@ async function handler(req) {
       return NextResponse.json({ error: 'No hay datos para actualizar' }, { status: 400 });
     }
 
-    await pool.execute(
+    await pool.query(
       'UPDATE user_preferences SET theme = COALESCE(?, theme), language = COALESCE(?, language) WHERE user_id = ?',
       [normalizedTheme, normalizedLanguage, userId]
     );

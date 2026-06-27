@@ -12,7 +12,7 @@ async function handler(req, { params }) {
       return NextResponse.json({ error: 'Nombre de la ciudad es requerido' }, { status: 400 });
     }
 
-    await pool.execute(
+    await pool.query(
       'DELETE FROM favorite_cities WHERE user_id = ? AND name = ?',
       [userId, name]
     );
